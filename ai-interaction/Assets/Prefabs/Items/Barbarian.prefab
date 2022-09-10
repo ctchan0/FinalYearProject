@@ -145,7 +145,6 @@ GameObject:
   - component: {fileID: 598389293445727971}
   - component: {fileID: 7597396294202570187}
   - component: {fileID: 4752494930575889161}
-  - component: {fileID: 1275012485181040034}
   m_Layer: 0
   m_Name: Barbarian
   m_TagString: Adventurer
@@ -161,7 +160,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4752494930416335494}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -187,7 +186,6 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  canControl: 1
   turnSpeed: 300
   moveSpeed: 2
 --- !u!65 &8586070543516635426
@@ -232,7 +230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 1
+    VectorObservationSize: 0
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
@@ -241,9 +239,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: a5fac4c7af637e044b613742ca25da00, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 3
-  m_BehaviorType: 0
+  m_BehaviorType: 1
   m_BehaviorName: Barbarian
   TeamId: 0
   m_UseChildSensors: 1
@@ -266,7 +264,6 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  canControl: 1
   turnSpeed: 300
   moveSpeed: 2
 --- !u!114 &7597396294202570187
@@ -344,38 +341,6 @@ MonoBehaviour:
       m_Action: Agent Controls
       m_Flags: 8
     m_Flags: 0
---- !u!114 &1275012485181040034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4752494930416335494}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a501962d056745d1a30e99146ee39fe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SensorName: GridSensor
-  m_CellScale: {x: 1, y: 0.01, z: 1}
-  m_GridSize: {x: 20, y: 1, z: 20}
-  m_RotateWithAgent: 1
-  m_AgentGameObject: {fileID: 4752494930416335494}
-  m_DetectableTags:
-  - Breakable
-  - Adventurer
-  m_ColliderMask:
-    serializedVersion: 2
-    m_Bits: 51
-  m_MaxColliderBufferSize: 500
-  m_InitialColliderBufferSize: 4
-  m_DebugColors:
-  - {r: 0.25799915, g: 0.5, b: 0.15408802, a: 0}
-  - {r: 0.062003035, g: 0.44873127, b: 0.5188679, a: 0}
-  m_GizmoYOffset: 0
-  m_ShowGizmos: 0
-  m_CompressionType: 1
-  m_ObservationStacks: 1
 --- !u!1001 &4752494930092061733
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -500,41 +465,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d6f6033022eabcd4090f976ef848ccb4, type: 3}
   m_PrefabInstance: {fileID: 4752494931492380373}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &5563398150229566340 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: d6f6033022eabcd4090f976ef848ccb4, type: 3}
-  m_PrefabInstance: {fileID: 4752494931492380373}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &29755360253458818
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5563398150229566340}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.3813712, y: 0.89033926, z: 0.1862826}
-  m_Center: {x: 0.08315211, y: 0.23454471, z: 0.0000003194297}
---- !u!95 &833119923609776007
-Animator:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5563398150229566340}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2ff44274beeb3624996f99d7ef0b6ac2, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
