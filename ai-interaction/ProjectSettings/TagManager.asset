@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Breakable
   - Adventurer
+  - Monster
   layers:
   - Default
   - TransparentFX

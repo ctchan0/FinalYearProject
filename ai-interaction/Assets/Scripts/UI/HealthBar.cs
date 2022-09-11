@@ -9,7 +9,7 @@ using TMPro;
 public class HealthBar : MonoBehaviour
 {
 	[SerializeField] Slider slider;
-	[SerializeField] Gradient gradient;
+	// [SerializeField] Gradient gradient;
 	[SerializeField] Image fill;
 	[SerializeField] TMP_Text healthStat;
 
@@ -18,14 +18,14 @@ public class HealthBar : MonoBehaviour
 		slider.maxValue = health;
 		slider.value = health;
 
-		fill.color = gradient.Evaluate(1f);
+		// fill.color = gradient.Evaluate(1f);
 	}
 
     public void SetHealth(int health)
 	{
 		slider.value = health;
 
-		fill.color = gradient.Evaluate(slider.normalizedValue);
+		// fill.color = gradient.Evaluate(slider.normalizedValue);
 	}
 
 	private void Update()

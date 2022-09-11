@@ -5,27 +5,34 @@ using UnityEngine.InputSystem;
 
 public class AgentController : MonoBehaviour
 {
-    [SerializeField] InputAction agentControls;
-
+    public InputAction moveControls;
+    public InputAction action;
     Vector2 dir = Vector2.zero;
 
     private void OnEnable()
     {
-        agentControls.Enable();
+        moveControls.Enable();
+        action.Enable();
     }
 
     private void OnDisbale()
     {
-        agentControls.Disable();
+        moveControls.Disable();
+        action.Disable();
     }
 
     void Update()
     {
-        dir = agentControls.ReadValue<Vector2>();
+        
     }
 
     public Vector2 GetVector()
     {
-        return dir;
+        return moveControls.ReadValue<Vector2>();
+    }
+
+    public bool ActionIsTriggered()
+    {
+        return action.ReadValue<float>() > 0;
     }
 }

@@ -4,21 +4,32 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
+using Random = UnityEngine.Random;
 
-public class Monster : Agent
+public class AdventurerAgent : Agent
 {
-    private EnvController m_EnvController;
+    public enum Class
+    {
+        Barbarian,
+        Mage
+    };
+    public Class m_Class;
 
-    AgentController agentControls;
+    private EnvController m_EnvController;
+    private EnvironmentParameters m_ResetParams;
+
+    private AgentController agentControls;
     public bool canControl = true;
 
     private Rigidbody rb;
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
-    public Transform target;
-    private Vector3 dirToGo;
 
-    EnvironmentParameters m_ResetParams;
+    public readonly int maxHealth = 3;
+    [SerializeField] private int currentHealth;
+    public bool isDead = false;
+
+    private HealthBar m_HealthBar;
 
     public override void Initialize()
     {
@@ -27,19 +38,25 @@ public class Monster : Agent
         agentControls = GetComponent<AgentController>();
         rb = GetComponent<Rigidbody>();
 
+        m_HealthBar = GetComponentInChildren<HealthBar>();
+        if (!m_HealthBar)
+            print("Missing health bar");
+
         m_ResetParams = Academy.Instance.EnvironmentParameters;
         SetResetParameters();
     }
+
     public override void OnEpisodeBegin()
     {
         rb.velocity = Vector3.zero;
 
         SetResetParameters();
     }
-
-    private void SetResetParameters()
+    protected void SetResetParameters()
     {
         SetAgentScale();
+        currentHealth = maxHealth;
+        m_HealthBar.SetMaxHealth(maxHealth);
     }
 
     public void SetAgentScale()
@@ -48,7 +65,28 @@ public class Monster : Agent
         gameObject.transform.localScale = new Vector3(agentScale, agentScale, agentScale);
     }
 
-    public void MoveAgent(ActionBuffers actionBuffers)
+    public void GetDamage(int damage)
+    {
+        currentHealth -= damage;
+        m_HealthBar.SetHealth(currentHealth);
+        if (currentHealth <= 0)
+        {
+            isDead = true;
+            AddReward(-0.3f);
+        }
+        else
+        {
+            AddReward(-0.1f);
+        }
+    }
+
+    public void ResetHealth()
+    {
+        currentHealth = maxHealth;
+        isDead = false;
+    }
+
+    protected void MoveAgent(ActionBuffers actionBuffers)
     {
         var continuousActions = actionBuffers.ContinuousActions;
         var discreteActions = actionBuffers.DiscreteActions;
@@ -65,27 +103,37 @@ public class Monster : Agent
 
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    private void OnCollisionEnter(Collision other) {
-        if (other.gameObject.CompareTag("Adventurer"))
+    /*
+        bool actionCommand = discreteActions[0] > 0;
+        if (actionCommand)
         {
-            var adventurerAgent = other.gameObject.GetComponent<AdventurerAgent>();
-            adventurerAgent.GetDamage(1);
-            AddReward(0.1f);
-            if (adventurerAgent.isDead)
-            {
-                AddReward(0.3f);
-                m_EnvController.KilledByMonster(adventurerAgent);
-            }
+            // perform action with space key
+           
+        }
+        else
+        {
+           
+        }  */
+    }
+
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        switch (m_Class)
+        {
+            case Class.Barbarian:
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
+                break;
+
+            case Class.Mage:
+                break;
+
+            default:
+                Debug.Log(this.gameObject + " has unknown class ");
+                break;
         }
     }
+
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
@@ -102,6 +150,10 @@ public class Monster : Agent
             var continuousActionsOut = actionsOut.ContinuousActions;
             continuousActionsOut[2] = agentControls.GetVector().x;
             continuousActionsOut[0] = agentControls.GetVector().y;
+
+            // Remember to add discrete action when using !!!!!!!!
+            // var discreteActionsOut = actionsOut.DiscreteActions;
+            // discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
         }
     }
 }

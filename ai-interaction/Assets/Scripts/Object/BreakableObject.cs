@@ -57,10 +57,10 @@ public class BreakableObject : MonoBehaviour
         int maxHits = afterHit.Length + 1;
         if (timesHit >= maxHits)
         {
-            print("Successfully chopped a tree");
-            agent.AddReward(0.5f);
-            
+            // Successfully chopped a tree
+            agent.AddReward(1f);
             m_EnvController.m_NumberOfRemainingResources--;
+            m_EnvController.AddGroupReward(1, -0.2f);
             this.gameObject.SetActive(false);
             if (resource)
                     Instantiate(resource, 
@@ -69,7 +69,8 @@ public class BreakableObject : MonoBehaviour
         }
         else
         {
-            agent.AddReward(0.1f);
+            m_EnvController.AddGroupReward(1, -0.1f);
+            agent.AddReward(0.5f);
             ShowNextHit();
         }
     }

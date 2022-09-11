@@ -4,27 +4,21 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
-using Random = UnityEngine.Random;
+using UnityEngine.InputSystem;
 
-public class AdventurerAgent : Agent
+public class MonsterAgent : Agent
 {
-    // public GameObject weapon;
-    protected EnvController m_EnvController;
-    // [SerializeField] Transform danger;
-    protected AgentController agentControls;
+    private EnvController m_EnvController;
+    EnvironmentParameters m_ResetParams;
+
+    private Animator m_Animator;
+
+    AgentController agentControls;
     public bool canControl = true;
 
-    // [SerializeField] List<GameObject> TargetsList = new List<GameObject>();
-
-    protected EnvironmentParameters m_ResetParams;
-
-    protected Rigidbody rb;
+    private Rigidbody rb;
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
-
-    public int maxHealth = 3;
-    [SerializeField] protected int currentHealth;
-    public bool isDead = false;
 
     public override void Initialize()
     {
@@ -32,21 +26,22 @@ public class AdventurerAgent : Agent
 
         agentControls = GetComponent<AgentController>();
         rb = GetComponent<Rigidbody>();
-
+        
+        m_Animator = GetComponent<Animator>();
+            
         m_ResetParams = Academy.Instance.EnvironmentParameters;
         SetResetParameters();
     }
-
     public override void OnEpisodeBegin()
     {
         rb.velocity = Vector3.zero;
 
         SetResetParameters();
     }
-    protected void SetResetParameters()
+
+    private void SetResetParameters()
     {
         SetAgentScale();
-        currentHealth = maxHealth;
     }
 
     public void SetAgentScale()
@@ -55,14 +50,7 @@ public class AdventurerAgent : Agent
         gameObject.transform.localScale = new Vector3(agentScale, agentScale, agentScale);
     }
 
-    public void GetDamage(int damage)
-    {
-        currentHealth -= damage;
-        if (currentHealth <= 0)
-            isDead = true;
-    }
-
-    protected void MoveAgent(ActionBuffers actionBuffers)
+    public void MoveAgent(ActionBuffers actionBuffers)
     {
         var continuousActions = actionBuffers.ContinuousActions;
         var discreteActions = actionBuffers.DiscreteActions;
@@ -79,6 +67,53 @@ public class AdventurerAgent : Agent
 
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
+
+        bool actionCommand = discreteActions[0] > 0;
+        if (actionCommand)
+        {
+            // perform action with space key
+            m_Animator.SetBool("attack", true);
+        }
+        else
+        {
+            m_Animator.SetBool("attack", false);
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+       
+    }
+
+    private void OnCollisionEnter(Collision other) {
+        if (other.gameObject.CompareTag("Adventurer"))
+        {
+            // attack behaviour
+            var adventurerAgent = other.gameObject.GetComponent<AdventurerAgent>();
+            adventurerAgent.GetDamage(1);
+            AddReward(0.3f);
+            m_EnvController.AddGroupReward(0, -0.1f);
+            if (adventurerAgent.isDead)
+            {
+                AddReward(0.4f);
+                m_EnvController.AddGroupReward(0, -0.2f);
+                m_EnvController.KilledByMonster(adventurerAgent);
+            }
+        }
+    }
+
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+    }
+    /// <summary>
+    /// Called every step of the engine. Here the agent takes an action.
+    /// </summary>
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+    {
+        // Move the agent using the action.
+        MoveAgent(actionBuffers);
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -88,6 +123,9 @@ public class AdventurerAgent : Agent
             var continuousActionsOut = actionsOut.ContinuousActions;
             continuousActionsOut[2] = agentControls.GetVector().x;
             continuousActionsOut[0] = agentControls.GetVector().y;
+
+            var discreteActionsOut = actionsOut.DiscreteActions;
+            discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
         }
     }
 }

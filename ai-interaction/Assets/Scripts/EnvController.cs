@@ -22,7 +22,7 @@ public class EnvController : MonoBehaviour
     [System.Serializable]
     public class MonsterInfo
     {
-        public Monster Monster;
+        public MonsterAgent Monster;
         [HideInInspector]
         public Vector3 StartingPos;
         [HideInInspector]
@@ -138,7 +138,8 @@ public class EnvController : MonoBehaviour
             ResetScene();
         }
 
-        //Hurry Up Penalty
+        // Hurry Up Penalty
+        m_MonsterGroup.AddGroupReward(-0.5f / MaxEnvironmentSteps);
         m_AdventurerGroup.AddGroupReward(-0.5f / MaxEnvironmentSteps);
     }
 
@@ -147,33 +148,6 @@ public class EnvController : MonoBehaviour
         // Goal of adventurer
         if (EmptyResources())
             GatherAllResources();
-    }
-
-    private bool EmptyResources()
-    {
-        return m_NumberOfRemainingResources == 0;
-    }
-
-    public void KilledByMonster(AdventurerAgent adventurer)
-    {
-        m_NumberOfRemainingAdventurers--;
-        adventurer.gameObject.SetActive(false);
-        
-        if (m_NumberOfRemainingAdventurers == 0)
-        {
-            AceAdventurerGroup();
-        }
-    }
-    private void AceAdventurerGroup()
-    {
-        m_MonsterGroup.AddGroupReward(1f);
-        m_AdventurerGroup.AddGroupReward(-1f);
-        StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
-
-        print("Gather all resources");
-        m_AdventurerGroup.EndGroupEpisode();
-        m_MonsterGroup.EndGroupEpisode();
-        ResetScene();
     }
 
     /// <summary>
@@ -238,6 +212,7 @@ public class EnvController : MonoBehaviour
             
             // Reborn Agents
             item.Adventurer.gameObject.SetActive(true);
+            item.Adventurer.ResetHealth();
             m_AdventurerGroup.RegisterAgent(item.Adventurer);
         }
 
@@ -253,7 +228,7 @@ public class EnvController : MonoBehaviour
             
             // Reborn Agents
             item.Monster.gameObject.SetActive(true);
-            m_AdventurerGroup.RegisterAgent(item.Monster);
+            m_MonsterGroup.RegisterAgent(item.Monster);
         }
 
         // Reset Resources
@@ -277,7 +252,7 @@ public class EnvController : MonoBehaviour
         m_GroundRenderer.material = m_GroundMaterial;
     }
 
-    public void GatherAllResources()
+    public void GatherAllResources() // adventurers win
     {
         m_AdventurerGroup.AddGroupReward(1f);
         m_MonsterGroup.AddGroupReward(-1f);
@@ -289,4 +264,46 @@ public class EnvController : MonoBehaviour
 
         ResetScene();
     }
+    private bool EmptyResources()
+    {
+        return m_NumberOfRemainingResources == 0;
+    }
+    private void AceAdventurerGroup() // monsters win
+    {
+        m_MonsterGroup.AddGroupReward(1f);
+        m_AdventurerGroup.AddGroupReward(-1f);
+        StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
+
+        print("All adventurers are dead");
+        m_AdventurerGroup.EndGroupEpisode();
+        m_MonsterGroup.EndGroupEpisode();
+        ResetScene();
+    }
+    public void KilledByMonster(AdventurerAgent adventurer)
+    {
+        m_NumberOfRemainingAdventurers--;
+        adventurer.gameObject.SetActive(false);
+        
+        if (m_NumberOfRemainingAdventurers == 0)
+        {
+            AceAdventurerGroup();
+        }
+    }
+
+    public void AddGroupReward(int teamId, float point)
+    {
+        switch(teamId)
+        {
+            case 0: // adventurers group
+                m_AdventurerGroup.AddGroupReward(point);
+                break;
+            case 1: // monsters group
+                m_MonsterGroup.AddGroupReward(point);
+                break;
+            default:
+                print("No such group");
+                break;
+        }
+    }
+
 }
