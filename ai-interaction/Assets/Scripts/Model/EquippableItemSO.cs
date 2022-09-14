@@ -15,13 +15,7 @@ namespace Inventory.Model
 
         public bool PerformAction(GameObject adventurer, List<ItemParameter> itemState = null)
         {
-            /* EquippmentAgent equippmentSystem = adventurer.GetComponent<EquippmentAgent>();
-            if (equippmentSystem != null)
-            {
-                equippmentSystem.SetWeapon(this, itemState == null ? 
-                    DefaultParametersList : itemState);
-                return true;
-            } */
+            // Equip weapon
             return false; 
         }
     }

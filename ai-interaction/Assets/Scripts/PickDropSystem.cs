@@ -19,11 +19,16 @@ public class PickDropSystem : MonoBehaviour
     {
         if (item != null && item.canPick)
         {
-            int reminder = inventoryData.AddItem(item.InventoryItem, item.Quantity);
-            if (reminder == 0)
-                item.DestroyItem();
+            if (inventoryData)
+            {
+                int reminder = inventoryData.AddItem(item.InventoryItem, item.Quantity);
+                if (reminder == 0)
+                    item.DestroyItem();
+                else
+                    item.Quantity = reminder;
+            }
             else
-                item.Quantity = reminder;
+                item.DestroyItem();
         }
     }
 

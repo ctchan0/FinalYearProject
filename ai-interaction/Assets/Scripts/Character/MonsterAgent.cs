@@ -20,12 +20,23 @@ public class MonsterAgent : Agent
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
 
+    public int damage = 1;
+
+    public int maxHealth = 3;
+    public int currentHealth { get; set;}
+    public bool isDead = false;
+    private HealthBar m_HealthBar;
+
     public override void Initialize()
     {
         m_EnvController = GetComponentInParent<EnvController>();
 
         agentControls = GetComponent<AgentController>();
         rb = GetComponent<Rigidbody>();
+
+        m_HealthBar = GetComponentInChildren<HealthBar>();
+        if (!m_HealthBar)
+            print("Missing health bar");
         
         m_Animator = GetComponent<Animator>();
             
@@ -42,7 +53,39 @@ public class MonsterAgent : Agent
     private void SetResetParameters()
     {
         SetAgentScale();
+        SetHealth();
     }
+
+    private void SetHealth()
+    {
+        currentHealth = maxHealth;
+        m_HealthBar.SetMaxHealth(maxHealth);
+    }
+
+    public void GetDamage(int damage)
+    {
+        currentHealth -= damage;
+        m_HealthBar.SetHealth(currentHealth);
+        if (currentHealth <= 0)
+        {
+            isDead = true;
+            m_EnvController.Eliminate(this.gameObject);
+            AddReward(-0.3f);
+            m_EnvController.AddGroupReward(1, -0.2f);
+        }
+        else
+        {
+            AddReward(-0.1f);
+            m_EnvController.AddGroupReward(1, -0.1f);
+        }
+    }
+
+    public void ResetHealth()
+    {
+        currentHealth = maxHealth;
+        isDead = false;
+    }
+
 
     public void SetAgentScale()
     {
@@ -89,17 +132,27 @@ public class MonsterAgent : Agent
     private void OnCollisionEnter(Collision other) {
         if (other.gameObject.CompareTag("Adventurer"))
         {
-            // attack behaviour
             var adventurerAgent = other.gameObject.GetComponent<AdventurerAgent>();
-            adventurerAgent.GetDamage(1);
+            adventurerAgent.GetDamage(damage);
             AddReward(0.3f);
-            m_EnvController.AddGroupReward(0, -0.1f);
             if (adventurerAgent.isDead)
-            {
                 AddReward(0.4f);
-                m_EnvController.AddGroupReward(0, -0.2f);
-                m_EnvController.KilledByMonster(adventurerAgent);
-            }
+        }
+        else if (other.gameObject.CompareTag("Shield"))
+        {
+            var adventurerAgent = other.transform.parent.GetComponent<AdventurerAgent>();
+            adventurerAgent.AddReward(0.8f);
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.gameObject.CompareTag("Sword"))
+        {
+            this.GetDamage(1);
+            var adventurerAgent = other.gameObject.transform.parent.GetComponent<AdventurerAgent>();
+            adventurerAgent.AddReward(0.3f);
+            if (this.isDead)
+                adventurerAgent.AddReward(0.4f);
         }
     }
 

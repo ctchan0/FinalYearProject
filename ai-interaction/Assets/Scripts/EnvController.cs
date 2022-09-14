@@ -10,6 +10,9 @@ public class EnvController : MonoBehaviour
     public class AdventurerInfo
     {
         public AdventurerAgent Adventurer;
+
+        // Add class identifier later
+
         [HideInInspector]
         public Vector3 StartingPos;
         [HideInInspector]
@@ -73,7 +76,7 @@ public class EnvController : MonoBehaviour
     private Grid grid;
 
     public int m_NumberOfRemainingAdventurers { get; set; }
-    public int m_NumberOfRemianingMonsters { get; set; }
+    public int m_NumberOfRemainingMonsters { get; set; }
     public int m_NumberOfRemainingResources { get; set; }
     private SimpleMultiAgentGroup m_AdventurerGroup;
     private SimpleMultiAgentGroup m_MonsterGroup;
@@ -100,8 +103,7 @@ public class EnvController : MonoBehaviour
             item.Col = item.Resource.GetComponent<Collider>();
         }
 
-        // Initialize Monsters
-        m_NumberOfRemianingMonsters = MonstersList.Count;
+        // Initialize Monstersaini = MonstersList.Count;
         m_MonsterGroup = new SimpleMultiAgentGroup(); 
         foreach (var item in MonstersList)
         {
@@ -192,7 +194,7 @@ public class EnvController : MonoBehaviour
 
         // Reset Remaining
         m_NumberOfRemainingAdventurers = AdventurersList.Count;
-        m_NumberOfRemianingMonsters = MonstersList.Count;
+        m_NumberOfRemainingMonsters = MonstersList.Count;
         m_NumberOfRemainingResources = ResourcesList.Count;
 
         // Random platform rot
@@ -268,25 +270,48 @@ public class EnvController : MonoBehaviour
     {
         return m_NumberOfRemainingResources == 0;
     }
-    private void AceAdventurerGroup() // monsters win
+    public void AceGroup(int teamId) // monsters win
     {
-        m_MonsterGroup.AddGroupReward(1f);
-        m_AdventurerGroup.AddGroupReward(-1f);
-        StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
+        if (teamId == 0)
+        {
+            m_MonsterGroup.AddGroupReward(1f);
+            m_AdventurerGroup.AddGroupReward(-1f);
+            StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
+            print("All adventurers are dead");
+        }
+        else if (teamId == 1)
+        {
+            m_MonsterGroup.AddGroupReward(-1f);
+            m_AdventurerGroup.AddGroupReward(1f);
+            StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.goalScoredMaterial, 0.5f));
+            print("All Monsters are dead");
+        }
 
-        print("All adventurers are dead");
         m_AdventurerGroup.EndGroupEpisode();
         m_MonsterGroup.EndGroupEpisode();
         ResetScene();
     }
-    public void KilledByMonster(AdventurerAgent adventurer)
+    public void Eliminate(GameObject character)
     {
-        m_NumberOfRemainingAdventurers--;
-        adventurer.gameObject.SetActive(false);
-        
-        if (m_NumberOfRemainingAdventurers == 0)
+        if (character.TryGetComponent<AdventurerAgent>(out AdventurerAgent adventurer))
         {
-            AceAdventurerGroup();
+            m_NumberOfRemainingAdventurers--;
+            character.SetActive(false);
+            
+            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Barbarian)
+            {
+                AceGroup(0);
+            }
+        }
+        else if (character.TryGetComponent<MonsterAgent>(out MonsterAgent monster))
+        {
+            m_NumberOfRemainingMonsters--;
+            character.SetActive(false);
+            
+            if (m_NumberOfRemainingAdventurers == 0)
+            {
+                AceGroup(1);
+            }
         }
     }
 

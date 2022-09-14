@@ -7,8 +7,6 @@ public class CharacterStatHealthModifierSO : CharacterStatModifierSO
 {
     public override void AffectCharacter(GameObject adventurer, float val)
     {
-        // adventurer.currentHealth += (int)val;
-        // adventurer.healthBar.SetHealth(adventurer.currentHealth);
+        adventurer.GetComponent<AdventurerAgent>().GetCure((int)val);
     }
-
 }

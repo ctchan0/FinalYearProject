@@ -7,6 +7,9 @@ TagManager:
   - Breakable
   - Adventurer
   - Monster
+  - Shield
+  - Axe
+  - Sword
   layers:
   - Default
   - TransparentFX

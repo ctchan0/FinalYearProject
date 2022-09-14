@@ -16,6 +16,8 @@ public class BreakableObject : MonoBehaviour
     [SerializeField] Mesh[] afterHit;
     [SerializeField] GameObject resource;
 
+    [SerializeField] string toolName;
+
     void Awake()
     {
         m_EnvController = GetComponentInParent<EnvController>();
@@ -86,7 +88,7 @@ public class BreakableObject : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (tag == "Breakable")
+        if (tag == "Breakable" && other.gameObject.CompareTag(toolName))
         {
             if (HitImmunity) return;
             other.transform.parent.

@@ -6,13 +6,15 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Random = UnityEngine.Random;
 
+public enum Class
+{
+    Barbarian,
+    Mage,
+    Knight,
+    Rogue
+};
 public class AdventurerAgent : Agent
 {
-    public enum Class
-    {
-        Barbarian,
-        Mage
-    };
     public Class m_Class;
 
     private EnvController m_EnvController;
@@ -25,11 +27,24 @@ public class AdventurerAgent : Agent
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
 
-    public readonly int maxHealth = 3;
-    [SerializeField] private int currentHealth;
+    public int maxHealth = 3;
+    public int currentHealth { get; set;}
     public bool isDead = false;
-
     private HealthBar m_HealthBar;
+
+    /* Mage skills */
+    [Header("Mage's Properties:")]
+    public GameObject laser;
+    float laserLength;
+
+    [Header("Knight's Properties:")]
+    public GameObject shield;
+
+    [Header("Rogue's Properties:")]
+    public GameObject arrowPrefab;
+    GameObject currentArrow;
+    Transform shootPos;
+    bool m_Shoot = true;
 
     public override void Initialize()
     {
@@ -55,14 +70,37 @@ public class AdventurerAgent : Agent
     protected void SetResetParameters()
     {
         SetAgentScale();
-        currentHealth = maxHealth;
-        m_HealthBar.SetMaxHealth(maxHealth);
+        if (m_Class == Class.Mage)
+            SetLaserLength();
+        SetHealth();
+        SetSkills();
     }
 
+    public void SetSkills()
+    {
+        m_Shoot = true;
+
+        if (arrowPrefab != null && currentArrow == null)
+        {
+            currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
+            currentArrow.SetActive(true);
+            currentArrow.GetComponent<Projectile>().belonger = this;
+            currentArrow.transform.SetParent(this.transform);
+        }
+    }
     public void SetAgentScale()
     {
         float agentScale = m_ResetParams.GetWithDefault("agent_scale", 1.0f);
         gameObject.transform.localScale = new Vector3(agentScale, agentScale, agentScale);
+    }
+    public void SetLaserLength()
+    {
+        laserLength = m_ResetParams.GetWithDefault("laser_length", 1.0f);
+    }
+    private void SetHealth()
+    {
+        currentHealth = maxHealth;
+        m_HealthBar.SetMaxHealth(maxHealth);
     }
 
     public void GetDamage(int damage)
@@ -72,12 +110,30 @@ public class AdventurerAgent : Agent
         if (currentHealth <= 0)
         {
             isDead = true;
+            m_EnvController.Eliminate(this.gameObject);
             AddReward(-0.3f);
+
+            if (m_Class == Class.Barbarian)
+                m_EnvController.AddGroupReward(0, -0.3f);
+
+            if (m_Class == Class.Mage)
+                AddReward(-0.2f);
+
+            m_EnvController.AddGroupReward(0, -0.2f);
         }
         else
         {
             AddReward(-0.1f);
+            m_EnvController.AddGroupReward(0, -0.1f);
         }
+    }
+
+    public void GetCure(int healAmount)
+    {
+        currentHealth += healAmount;
+        if (currentHealth > maxHealth)
+            currentHealth = maxHealth;
+        m_HealthBar.SetHealth(currentHealth);
     }
 
     public void ResetHealth()
@@ -86,12 +142,12 @@ public class AdventurerAgent : Agent
         isDead = false;
     }
 
-    protected void MoveAgent(ActionBuffers actionBuffers)
+    private void MoveAgent(ActionBuffers actionBuffers)
     {
         var continuousActions = actionBuffers.ContinuousActions;
         var discreteActions = actionBuffers.DiscreteActions;
 
-        var forward = Mathf.Clamp(continuousActions[0], 0f, 1f);
+        var forward = Mathf.Clamp(continuousActions[0], -0.5f, 1f);
         var right = Mathf.Clamp(continuousActions[1], -1f, 1f);
         var rotate = Mathf.Clamp(continuousActions[2], -1f, 1f);
 
@@ -104,17 +160,127 @@ public class AdventurerAgent : Agent
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
 
-    /*
         bool actionCommand = discreteActions[0] > 0;
         if (actionCommand)
         {
             // perform action with space key
-           
+            switch (m_Class)
+            {
+                case Class.Barbarian:
+                    break;
+
+                case Class.Mage:
+                    if (m_Shoot)
+                        StartCoroutine(UseSkill("ShootLaser", 2f));
+                    break;
+                case Class.Knight:
+                    break;
+
+                case Class.Rogue:
+                    if (m_Shoot)
+                        StartCoroutine(UseSkill("ShootArrow", 2f));
+                    break;
+
+                default:
+                    Debug.Log(this.gameObject + " has unknown class ");
+                    break;
+            }
         }
         else
         {
            
-        }  */
+        }  
+    }
+
+    private IEnumerator UseSkill(string skill, float coolDownTime)
+    {
+        if (skill == "ShootLaser")
+        {
+            m_Shoot = false;
+            
+            // Shoot Laser
+            laser.SetActive(true);
+            laser.transform.localScale = new Vector3(1f, 1f, laserLength);
+            var rayDir = 5.0f * transform.forward;
+            
+            // Debug.DrawRay(transform.position + new Vector3(0, 0.5f, 0), rayDir, Color.green, 0.5f, true);
+            RaycastHit hit;
+            if (Physics.SphereCast(transform.position + new Vector3(0, 0.5f, 0), 1f, rayDir, out hit, 5f))
+            {
+                if (hit.collider.gameObject.CompareTag("Adventurer"))
+                {
+                    // heal
+                    hit.collider.gameObject.GetComponent<AdventurerAgent>().GetCure(2);
+                    AddReward(0.7f);
+                }
+                else if (hit.collider.gameObject.CompareTag("Monster"))
+                {
+                    // damage
+                    var target = hit.collider.gameObject.GetComponent<MonsterAgent>();
+                    target.GetDamage(1);
+                    AddReward(0.3f);
+                    if (target.isDead)
+                    {
+                        AddReward(0.4f);
+                        m_EnvController.Eliminate(target.gameObject);
+                    }
+                }
+            }
+            yield return new WaitForSeconds(0.1f);
+            laser.SetActive(false);
+
+            yield return new WaitForSeconds(coolDownTime);
+            m_Shoot = true;
+        }
+        else if (skill == "ShootArrow")
+        {
+            m_Shoot = false;
+
+            if (currentArrow == null)
+            {
+                currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
+                currentArrow.SetActive(true);
+                currentArrow.GetComponent<Projectile>().belonger = this;
+                currentArrow.transform.SetParent(this.transform);
+            }
+            currentArrow.GetComponent<Projectile>().shoot = true;
+
+            yield return new WaitForSeconds(coolDownTime);
+            currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
+            currentArrow.SetActive(true);
+            currentArrow.GetComponent<Projectile>().belonger = this;
+            currentArrow.transform.SetParent(this.transform);
+
+            m_Shoot = true;
+        }
+        else
+        {
+            print("No such skill");
+        }
+    }
+
+    private void StayAlive()
+    {
+        if (!isDead)
+        {
+            switch (m_Class)
+            {
+                case Class.Barbarian:
+                    AddReward(0.5f / m_EnvController.MaxEnvironmentSteps);
+                    break;
+
+                case Class.Mage:
+                    AddReward(0.3f / m_EnvController.MaxEnvironmentSteps);
+                    break;
+
+                case Class.Rogue:
+                    AddReward(0.3f / m_EnvController.MaxEnvironmentSteps);
+                    break;
+
+                default:
+                    break;
+            }
+        }
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -126,6 +292,25 @@ public class AdventurerAgent : Agent
                 break;
 
             case Class.Mage:
+                sensor.AddObservation(m_Shoot);
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+                foreach (var item in m_EnvController.AdventurersList)
+                {
+                    sensor.AddObservation(item.Adventurer.currentHealth);
+                }
+                break;
+
+            case Class.Knight:
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+                sensor.AddObservation(shield.transform.position);
+                break;
+
+            case Class.Rogue:
+                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
+                sensor.AddObservation(m_Shoot);
+                sensor.AddObservation(this.currentHealth);
                 break;
 
             default:
@@ -141,6 +326,8 @@ public class AdventurerAgent : Agent
     {
         // Move the agent using the action.
         MoveAgent(actionBuffers);
+        
+        StayAlive();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -152,8 +339,8 @@ public class AdventurerAgent : Agent
             continuousActionsOut[0] = agentControls.GetVector().y;
 
             // Remember to add discrete action when using !!!!!!!!
-            // var discreteActionsOut = actionsOut.DiscreteActions;
-            // discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
+            var discreteActionsOut = actionsOut.DiscreteActions;
+            discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
         }
     }
 }

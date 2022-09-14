@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b0f70c3ea083ff46a8e3a2a7e0e51e8, type: 3}
-  m_Name: log
+  m_Name: Log
   m_EditorClassIdentifier: 
   <IsStackable>k__BackingField: 1
   <MaxStackSize>k__BackingField: 5
@@ -19,5 +19,5 @@ MonoBehaviour:
 
 '
   <ItemImage>k__BackingField: {fileID: 21300000, guid: cfe24e293feb7b142a8f2c2686cab002, type: 3}
-  <ItemPrefab>k__BackingField: {fileID: 1239330437662859234, guid: 67b810cbd78b6f245a0fe1b265890bbb, type: 3}
+  <ItemPrefab>k__BackingField: {fileID: 5717137646866879777, guid: 7bedf419979459046a04b681d5c37b46, type: 3}
   <DefaultParametersList>k__BackingField: []
