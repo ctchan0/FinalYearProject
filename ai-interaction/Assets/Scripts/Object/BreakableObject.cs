@@ -68,6 +68,8 @@ public class BreakableObject : MonoBehaviour
                     Instantiate(resource, 
                         transform.position + resource.transform.position, 
                         Quaternion.identity);
+            if (m_EnvController.m_NumberOfRemainingResources == 0)
+                m_EnvController.GatherAllResources();
         }
         else
         {

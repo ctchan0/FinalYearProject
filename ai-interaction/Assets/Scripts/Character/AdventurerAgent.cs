@@ -13,6 +13,7 @@ public enum Class
     Knight,
     Rogue
 };
+
 public class AdventurerAgent : Agent
 {
     public Class m_Class;
@@ -26,6 +27,7 @@ public class AdventurerAgent : Agent
     private Rigidbody rb;
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
+    public float worth = 0.3f; // life value in game 
 
     public int maxHealth = 3;
     public int currentHealth { get; set;}
@@ -58,6 +60,7 @@ public class AdventurerAgent : Agent
             print("Missing health bar");
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
+
         SetResetParameters();
     }
 
@@ -111,20 +114,13 @@ public class AdventurerAgent : Agent
         {
             isDead = true;
             m_EnvController.Eliminate(this.gameObject);
-            AddReward(-0.3f);
+            AddReward(-worth);
 
-            if (m_Class == Class.Barbarian)
-                m_EnvController.AddGroupReward(0, -0.3f);
-
-            if (m_Class == Class.Mage)
-                AddReward(-0.2f);
-
-            m_EnvController.AddGroupReward(0, -0.2f);
+            m_EnvController.AddGroupReward(0, -1f / m_EnvController.AdventurersList.Count);
         }
         else
         {
-            AddReward(-0.1f);
-            m_EnvController.AddGroupReward(0, -0.1f);
+            AddReward(-1f / this.maxHealth);
         }
     }
 
@@ -136,7 +132,7 @@ public class AdventurerAgent : Agent
         m_HealthBar.SetHealth(currentHealth);
     }
 
-    public void ResetHealth()
+    public void ResetHealth()  // controls in env_controller
     {
         currentHealth = maxHealth;
         isDead = false;
@@ -147,6 +143,7 @@ public class AdventurerAgent : Agent
         var continuousActions = actionBuffers.ContinuousActions;
         var discreteActions = actionBuffers.DiscreteActions;
 
+        // movement
         var forward = Mathf.Clamp(continuousActions[0], -0.5f, 1f);
         var right = Mathf.Clamp(continuousActions[1], -1f, 1f);
         var rotate = Mathf.Clamp(continuousActions[2], -1f, 1f);
@@ -160,6 +157,7 @@ public class AdventurerAgent : Agent
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
 
+        // skills
         bool actionCommand = discreteActions[0] > 0;
         if (actionCommand)
         {
@@ -210,20 +208,18 @@ public class AdventurerAgent : Agent
                 if (hit.collider.gameObject.CompareTag("Adventurer"))
                 {
                     // heal
-                    hit.collider.gameObject.GetComponent<AdventurerAgent>().GetCure(2);
-                    AddReward(0.7f);
+                    var target = hit.collider.gameObject.GetComponent<AdventurerAgent>();
+                    target.GetCure(2);
+                    if (target.maxHealth >= 2)
+                        AddReward(2f / target.maxHealth); // assure reward within range <= 1f
+                    else 
+                        AddReward(1f);
                 }
                 else if (hit.collider.gameObject.CompareTag("Monster"))
                 {
                     // damage
                     var target = hit.collider.gameObject.GetComponent<MonsterAgent>();
-                    target.GetDamage(1);
-                    AddReward(0.3f);
-                    if (target.isDead)
-                    {
-                        AddReward(0.4f);
-                        m_EnvController.Eliminate(target.gameObject);
-                    }
+                    DealDamage(target, 1);
                 }
             }
             yield return new WaitForSeconds(0.1f);
@@ -259,6 +255,20 @@ public class AdventurerAgent : Agent
         }
     }
 
+    public void DealDamage(MonsterAgent target, int damage)
+    {
+        if (damage > target.maxHealth)
+            damage = target.maxHealth;
+        target.GetDamage(damage);
+        AddReward(damage / target.maxHealth);
+
+        if (target.isDead)
+        {
+            AddReward(0.3f);
+            AddReward(1f / m_EnvController.MonstersList.Count);
+        }
+    }
+
     private void StayAlive()
     {
         if (!isDead)
@@ -266,15 +276,15 @@ public class AdventurerAgent : Agent
             switch (m_Class)
             {
                 case Class.Barbarian:
-                    AddReward(0.5f / m_EnvController.MaxEnvironmentSteps);
+                    AddReward(worth / m_EnvController.MaxEnvironmentSteps);
                     break;
 
                 case Class.Mage:
-                    AddReward(0.3f / m_EnvController.MaxEnvironmentSteps);
+                    AddReward(worth / m_EnvController.MaxEnvironmentSteps);
                     break;
 
                 case Class.Rogue:
-                    AddReward(0.3f / m_EnvController.MaxEnvironmentSteps);
+                    AddReward(worth / m_EnvController.MaxEnvironmentSteps);
                     break;
 
                 default:

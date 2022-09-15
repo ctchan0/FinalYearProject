@@ -96,9 +96,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: a35a88cd5bf2d5a4fab2d7d3b249d3fc, type: 3}
   m_InferenceDevice: 3
-  m_BehaviorType: 0
+  m_BehaviorType: 2
   m_BehaviorName: Mage
   TeamId: 0
   m_UseChildSensors: 1
@@ -125,9 +125,11 @@ MonoBehaviour:
   canControl: 1
   turnSpeed: 300
   moveSpeed: 3.5
+  worth: 0.3
   maxHealth: 2
   isDead: 0
   laser: {fileID: 6887261639635395887}
+  shield: {fileID: 0}
   arrowPrefab: {fileID: 0}
 --- !u!114 &7474894481836247234
 MonoBehaviour:

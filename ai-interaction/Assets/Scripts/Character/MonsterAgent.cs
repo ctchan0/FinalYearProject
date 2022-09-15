@@ -66,17 +66,12 @@ public class MonsterAgent : Agent
     {
         currentHealth -= damage;
         m_HealthBar.SetHealth(currentHealth);
+
         if (currentHealth <= 0)
         {
             isDead = true;
             m_EnvController.Eliminate(this.gameObject);
-            AddReward(-0.3f);
-            m_EnvController.AddGroupReward(1, -0.2f);
-        }
-        else
-        {
-            AddReward(-0.1f);
-            m_EnvController.AddGroupReward(1, -0.1f);
+            m_EnvController.AddGroupReward(1, -1f / m_EnvController.MonstersList.Count);
         }
     }
 
@@ -129,30 +124,30 @@ public class MonsterAgent : Agent
        
     }
 
-    private void OnCollisionEnter(Collision other) {
+    private void OnCollisionEnter(Collision other) 
+    {
         if (other.gameObject.CompareTag("Adventurer"))
         {
-            var adventurerAgent = other.gameObject.GetComponent<AdventurerAgent>();
-            adventurerAgent.GetDamage(damage);
-            AddReward(0.3f);
-            if (adventurerAgent.isDead)
-                AddReward(0.4f);
+            var target = other.gameObject.GetComponent<AdventurerAgent>();
+            target.GetDamage(damage);
+            AddReward(1f / target.maxHealth);
+            if (target.isDead)
+                AddReward(target.worth);
         }
-        else if (other.gameObject.CompareTag("Shield"))
+        else if (other.gameObject.CompareTag("Shield")) // attack ineffective
         {
             var adventurerAgent = other.transform.parent.GetComponent<AdventurerAgent>();
-            adventurerAgent.AddReward(0.8f);
+            AddReward(-0.1f);
+            adventurerAgent.AddReward(0.5f);
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
+    private void OnTriggerEnter(Collider other) 
+    {
         if (other.gameObject.CompareTag("Sword"))
         {
-            this.GetDamage(1);
             var adventurerAgent = other.gameObject.transform.parent.GetComponent<AdventurerAgent>();
-            adventurerAgent.AddReward(0.3f);
-            if (this.isDead)
-                adventurerAgent.AddReward(0.4f);
+            adventurerAgent.DealDamage(this, 1);
         }
     }
 

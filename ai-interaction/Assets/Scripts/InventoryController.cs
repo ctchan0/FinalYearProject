@@ -41,8 +41,10 @@ namespace Inventory
 
         private void Start()
         {
-            PrepareUI();
-            PrepareInventoryData();
+            if (inventoryUI)
+                PrepareUI();
+            if (inventoryData)
+                PrepareInventoryData();
 
         }
 

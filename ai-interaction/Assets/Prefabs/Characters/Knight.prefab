@@ -201,7 +201,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 2
+    VectorObservationSize: 5
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
@@ -210,9 +210,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: d14a992c1086b414ca8f554b252ed7c0, type: 3}
   m_InferenceDevice: 3
-  m_BehaviorType: 0
+  m_BehaviorType: 2
   m_BehaviorName: Knight
   TeamId: 0
   m_UseChildSensors: 1
@@ -239,9 +239,11 @@ MonoBehaviour:
   canControl: 1
   turnSpeed: 300
   moveSpeed: 2
+  worth: 0.3
   maxHealth: 8
   isDead: 0
   laser: {fileID: 0}
+  shield: {fileID: 8402601803863303796}
   arrowPrefab: {fileID: 0}
 --- !u!114 &2885383738147454759
 MonoBehaviour:

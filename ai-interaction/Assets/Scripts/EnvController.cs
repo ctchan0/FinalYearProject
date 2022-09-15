@@ -10,9 +10,8 @@ public class EnvController : MonoBehaviour
     public class AdventurerInfo
     {
         public AdventurerAgent Adventurer;
-
-        // Add class identifier later
-
+        [HideInInspector]
+        public Class Class;
         [HideInInspector]
         public Vector3 StartingPos;
         [HideInInspector]
@@ -63,18 +62,17 @@ public class EnvController : MonoBehaviour
     Material m_GroundMaterial; //cached on Awake()
     Renderer m_GroundRenderer;
 
-    public List<AdventurerInfo> AdventurersList = new List<AdventurerInfo>();
-    // private Dictionary<BarbarianAgent, AdventurerInfo> m_AdventurerDict = new Dictionary<BarbarianAgent, AdventurerInfo>();
-    public List<MonsterInfo> MonstersList = new List<MonsterInfo>();
-    public List<ResourceInfo> ResourcesList = new List<ResourceInfo>();
-
+    private GameSetting m_GameSetting;
     public bool UseRandomAgentRotation = true;
     public bool UseRandomAgentPosition = true;
-    private GameSetting m_GameSetting;
 
     public GridLayout m_GridLayout;
     private Grid grid;
 
+    public List<AdventurerInfo> AdventurersList = new List<AdventurerInfo>();
+    // private Dictionary<AdventurerAgent, AdventurerInfo> m_AdventurerDict = new Dictionary<AdventurerAgent, AdventurerInfo>();
+    public List<MonsterInfo> MonstersList = new List<MonsterInfo>();
+    public List<ResourceInfo> ResourcesList = new List<ResourceInfo>();
     public int m_NumberOfRemainingAdventurers { get; set; }
     public int m_NumberOfRemainingMonsters { get; set; }
     public int m_NumberOfRemainingResources { get; set; }
@@ -94,16 +92,20 @@ public class EnvController : MonoBehaviour
         if (m_GridLayout)
             grid = m_GridLayout.GetComponent<Grid>();
 
-        // Initialize Resources
-        m_NumberOfRemainingResources = ResourcesList.Count;
-        foreach (var item in ResourcesList)
+        m_NumberOfRemainingAdventurers = AdventurersList.Count;
+        m_AdventurerGroup = new SimpleMultiAgentGroup();
+        foreach (var item in AdventurersList)
         {
-            item.StartingPos = item.Resource.transform.position;
-            item.StartingRot = item.Resource.transform.rotation;
-            item.Col = item.Resource.GetComponent<Collider>();
+            item.Class = item.Adventurer.m_Class;
+            item.StartingPos = item.Adventurer.transform.position;
+            item.StartingRot = item.Adventurer.transform.rotation;
+            item.Rb = item.Adventurer.GetComponent<Rigidbody>();
+            item.Col = item.Adventurer.GetComponent<Collider>();
+            // Add to team manager
+            m_AdventurerGroup.RegisterAgent(item.Adventurer);
         }
 
-        // Initialize Monstersaini = MonstersList.Count;
+        m_NumberOfRemainingMonsters = MonstersList.Count;
         m_MonsterGroup = new SimpleMultiAgentGroup(); 
         foreach (var item in MonstersList)
         {
@@ -115,18 +117,14 @@ public class EnvController : MonoBehaviour
             m_MonsterGroup.RegisterAgent(item.Monster);
         }
 
-        // Initialize TeamManager
-        m_NumberOfRemainingAdventurers = AdventurersList.Count;
-        m_AdventurerGroup = new SimpleMultiAgentGroup();
-        foreach (var item in AdventurersList)
+        m_NumberOfRemainingResources = ResourcesList.Count;
+        foreach (var item in ResourcesList)
         {
-            item.StartingPos = item.Adventurer.transform.position;
-            item.StartingRot = item.Adventurer.transform.rotation;
-            item.Rb = item.Adventurer.GetComponent<Rigidbody>();
-            item.Col = item.Adventurer.GetComponent<Collider>();
-            // Add to team manager
-            m_AdventurerGroup.RegisterAgent(item.Adventurer);
+            item.StartingPos = item.Resource.transform.position;
+            item.StartingRot = item.Resource.transform.rotation;
+            item.Col = item.Resource.GetComponent<Collider>();
         }
+
         ResetScene();
     }
 
@@ -147,9 +145,7 @@ public class EnvController : MonoBehaviour
 
     void Update()
     {
-        // Goal of adventurer
-        if (EmptyResources())
-            GatherAllResources();
+        
     }
 
     /// <summary>
@@ -266,20 +262,17 @@ public class EnvController : MonoBehaviour
 
         ResetScene();
     }
-    private bool EmptyResources()
+
+    public void AceGroup(int teamId) 
     {
-        return m_NumberOfRemainingResources == 0;
-    }
-    public void AceGroup(int teamId) // monsters win
-    {
-        if (teamId == 0)
+        if (teamId == 0) // adventurer's team
         {
             m_MonsterGroup.AddGroupReward(1f);
             m_AdventurerGroup.AddGroupReward(-1f);
             StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
             print("All adventurers are dead");
         }
-        else if (teamId == 1)
+        else if (teamId == 1) // monster's team
         {
             m_MonsterGroup.AddGroupReward(-1f);
             m_AdventurerGroup.AddGroupReward(1f);
