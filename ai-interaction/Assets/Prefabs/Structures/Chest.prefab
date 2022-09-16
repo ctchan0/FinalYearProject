@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5672527484649868465}
   - component: {fileID: 5013980215132171113}
+  - component: {fileID: 385023341621293656}
+  - component: {fileID: 8682737289852512237}
   m_Layer: 0
   m_Name: Chest
   m_TagString: Untagged
@@ -54,6 +56,33 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!65 &385023341621293656
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487094464624033822}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.7}
+  m_Center: {x: 0, y: 0.5, z: 0}
+--- !u!114 &8682737289852512237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487094464624033822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ecd9cd4c59f724290d5371c4d1faa3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  treasure: {fileID: 3271149414914646310, guid: b5f26d4af45981c48af0ebf475c2dd68, type: 3}
+  closed: 1
 --- !u!1001 &143335753099241053
 PrefabInstance:
   m_ObjectHideFlags: 0

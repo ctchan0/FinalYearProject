@@ -1,206 +1,264 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Inventory.UI;
+using UnityEngine.InputSystem;
 using Inventory.Model;
-using System.Text;
+using System.Linq;
 
-/* Reference from Sunny Valley Studion Youtube channel */
-
-namespace Inventory
+public class InventoryController : MonoBehaviour
 {
-    public class InventoryController : MonoBehaviour
+    public InputAction inventoryControls;
+    public InventoryUI inventoryUI;
+    private bool display = true;
+
+    public List<InventoryItem> inventoryItemsList = new List<InventoryItem>();
+    public int Size = 3;
+
+    private void Awake()
     {
-        private InventoryControls inventoryControls;
-
-        [SerializeField] UIInventoryPage inventoryUI;
-        [SerializeField] InventorySO inventoryData;
-
-        public List<InventoryItem> initialItems = new List<InventoryItem>();
-
-        [SerializeField] private AudioClip dropClip;
-        [SerializeField] private AudioSource audioSource;
-
-        [SerializeField] private PickDropSystem pickDropSystem;
-
-        private void Awake()
+        Initialize();
+        if (inventoryUI)
         {
-            inventoryControls = new InventoryControls();
+            inventoryControls.performed += _ => Display();
+            inventoryUI.GetComponent<InventoryUI>().Initialize(Size);
         }
+    }
 
-        private void OnEnable()
-        {
-            inventoryControls.Enable();
+    #region DisplayInvenotry
+    private void OnEnable()
+    {
+        inventoryControls.Enable();
+    }
+
+    private void OnDisbale()
+    {
+        inventoryControls.Disable();
+    }
+    private void Display()
+    {
+        if (!display)
+            inventoryUI.Show();
+        else 
+            inventoryUI.Hide();
+        display = !display;
+    }
+
+    #endregion
+
+    public void Initialize()
+    {
+        int init = inventoryItemsList.Count;
+        if (init == 0)
+            InformAboutChanges();
+        for (int i = init; i <= Size - init; i++) {
+            inventoryItemsList.Add(InventoryItem.GetEmptyItem());
         }
+    }
 
-        private void OnDisable()
+    #region AddItem
+
+    public int AddItem(ItemSO item, int quantity, List<ItemParameter> itemState = null) 
+    {
+        if (item.IsStackable == false) 
         {
-            inventoryControls.Disable();
-        }
-
-        private void Start()
-        {
-            if (inventoryUI)
-                PrepareUI();
-            if (inventoryData)
-                PrepareInventoryData();
-
-        }
-
-        private void PrepareInventoryData()
-        {
-            inventoryData.Initialize();
-            inventoryData.OnInventoryUpdated += UpdateInventoryUI;
-            foreach (InventoryItem item in initialItems) 
+            // Assign to empty inventory slot
+            while (quantity > 0 && !IsInventoryFull())
             {
-                if (item.IsEmpty) continue;
-                inventoryData.AddItem(item);
+                quantity -= AddItemToFirstFreeSlot(item, 1, itemState);
+            }
+            InformAboutChanges();
+            return quantity;         
+        }
+        // else;
+        quantity = AddStackableItem(item, quantity);
+        InformAboutChanges();
+        return quantity;
+    }
+    private bool IsInventoryFull()
+        => inventoryItemsList.Where(item => item.IsEmpty).Any() == false;
+
+    private int AddItemToFirstFreeSlot(ItemSO item, int quantity, List<ItemParameter> itemState = null)
+    {
+        InventoryItem newItem = new InventoryItem
+        {
+            item = item,
+            quantity = quantity,
+            itemState = new List<ItemParameter>(itemState == null ? item.DefaultParametersList : itemState)
+        };
+        for (int i = 0; i < inventoryItemsList.Count; i++)
+        {
+            if (inventoryItemsList[i].IsEmpty)
+            {
+                inventoryItemsList[i] = newItem;
+                return quantity;
             }
         }
+        return 0;
+    }
 
-        private void UpdateInventoryUI(Dictionary<int, InventoryItem> inventoryState)
+    private int AddStackableItem(ItemSO item, int quantity)
+    {
+        for (int i = 0; i < inventoryItemsList.Count; i++)
         {
-            inventoryUI.ResetAllItems();
-            foreach (var item in inventoryState)
+            if (inventoryItemsList[i].IsEmpty) 
+                continue;
+            if (inventoryItemsList[i].item.ID == item.ID)
             {
-                inventoryUI.UpdateData(item.Key, item.Value.item.ItemImage, item.Value.quantity);
-            }
-        }
+                int amountPossiblleToTake = inventoryItemsList[i].item.MaxStackSize - inventoryItemsList[i].quantity;
 
-        private void PrepareUI()
-        {
-            inventoryUI.InitializeInventoryUI(inventoryData.Size);
-            inventoryUI.OnDescriptionRequested += HandleDescriptionRequest;
-            inventoryUI.OnSwapItems += HandleSwapItems;
-            inventoryUI.OnStarterDragging += HandleDragging;
-            inventoryUI.OnItemActionRequested += HandleItemActionRequest;
-        }
-
-        private void HandleItemActionRequest(int itemIndex)
-        {
-            InventoryItem inventoryItem = inventoryData.GetItemAt(itemIndex);
-            if (inventoryItem.IsEmpty) return;
-
-            inventoryUI.ShowItemAction(itemIndex);
-
-            IItemAction itemAction = inventoryItem.item as IItemAction;
-            if (itemAction != null)
-            {
-                inventoryUI.AddAction(itemAction.ActionName, () => PerformAction(itemIndex));
-            }
-
-            IDestroyableItem destroyableItem = inventoryItem.item as IDestroyableItem;
-            if (destroyableItem != null)
-            {
-                inventoryUI.AddAction("Drop", () => DropItem(itemIndex, inventoryItem.quantity));
-            }
-        }
-        public void PerformAction(int itemIndex)
-        {
-            InventoryItem inventoryItem = inventoryData.GetItemAt(itemIndex);
-            if (inventoryItem.IsEmpty) return;
-
-            IDestroyableItem destroyableItem = inventoryItem.item as IDestroyableItem;
-            if (destroyableItem != null)
-            {
-                inventoryData.RemoveItem(itemIndex, 1);
-            }
-            
-            IItemAction itemAction = inventoryItem.item as IItemAction;
-            if (itemAction != null)
-            {
-                itemAction.PerformAction(this.gameObject, inventoryItem.itemState);
-                audioSource.PlayOneShot(itemAction.actionSFX); 
-                if (inventoryData.GetItemAt(itemIndex).IsEmpty)
-                    inventoryUI.ResetSelection();
-            }
-        }
-        private void DropItem(int itemIndex, int quantity)
-        {
-            InventoryItem inventoryItem = inventoryData.GetItemAt(itemIndex);
-
-            inventoryData.RemoveItem(itemIndex, quantity);
-            inventoryUI.ResetSelection();
-            audioSource.PlayOneShot(dropClip);
-            pickDropSystem.ThrowItem(inventoryItem, quantity);
-        }
-
-        public bool UseItem(ItemSO item) 
-        {
-            if (ItemExists(item, 1))
-            {
-                PerformAction(inventoryData.ExistsInInventory(item, 1));
-                return true;
-            }
-            else 
-            {
-                return false;
-            }
-        }
-        public bool ItemExists(ItemSO item, int quantity)
-        {
-            return inventoryData.ExistsInInventory(item, quantity) != -1;
-        }
-
-        private void HandleDragging(int itemIndex)
-        {
-            InventoryItem inventoryItem = inventoryData.GetItemAt(itemIndex);
-            if (inventoryItem.IsEmpty) return;
-            inventoryUI.CreateDraggedItem(inventoryItem.item.ItemImage, inventoryItem.quantity);
-        }
-
-        private void HandleSwapItems(int itemIndex_1, int itemIndex_2)
-        {
-            inventoryData.SwapItems(itemIndex_1, itemIndex_2);
-        }
-
-        private void HandleDescriptionRequest(int itemIndex)
-        {
-            InventoryItem inventoryItem = inventoryData.GetItemAt(itemIndex);
-            if (inventoryItem.IsEmpty)
-            {
-                inventoryUI.ResetSelection();
-                return;
-            }
-            ItemSO item = inventoryItem.item;
-
-            string description = PrepareDescription(inventoryItem);
-            inventoryUI.UpdateDescription(itemIndex, item.ItemImage, item.name, description);
-        }
-
-        private string PrepareDescription(InventoryItem inventoryItem)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append(inventoryItem.item.Description);
-            sb.AppendLine();
-            for (int i = 0; i < inventoryItem.itemState.Count; i++)
-            {
-                sb.Append($"{inventoryItem.itemState[i].itemParameter.ParameterName} " +
-                    $": {inventoryItem.itemState[i].value} / " +
-                    $"{inventoryItem.item.DefaultParametersList[i].value}");
-                sb.AppendLine();
-            }
-            return sb.ToString();
-        }
-
-        public void Update()
-        {
-            if (inventoryControls.Inventory.SetActive.triggered)
-            {
-                if (inventoryUI.isActiveAndEnabled == false)
+                if (quantity > amountPossiblleToTake)
                 {
-                    inventoryUI.Show();
-                    foreach (var item in inventoryData.GetCurrentInventoryState())
-                    {
-                        inventoryUI.UpdateData(item.Key, item.Value.item.ItemImage, item.Value.quantity);
-                    }
+                    inventoryItemsList[i] = inventoryItemsList[i].ChangeQuantity(inventoryItemsList[i].item.MaxStackSize);
+                    quantity -= amountPossiblleToTake;
                 }
                 else
                 {
-                    inventoryUI.Hide();
+                    inventoryItemsList[i] = inventoryItemsList[i].ChangeQuantity(inventoryItemsList[i].quantity + quantity);
+                    InformAboutChanges();
+                    return 0;
                 }
             }
         }
+        while (quantity > 0 && !IsInventoryFull())
+        {
+            int newQuantity = Mathf.Clamp(quantity, 0, item.MaxStackSize);
+            quantity -= newQuantity;
+            AddItemToFirstFreeSlot(item, newQuantity);
+        }
+        return quantity;
+    }
+
+    #endregion
+
+    #region RemoveItem
+    public void RemoveItem(int itemIndex, int amount)
+    {
+        if (inventoryItemsList.Count > itemIndex)
+        {
+            if (inventoryItemsList[itemIndex].IsEmpty)
+                return;
+            int reminder = inventoryItemsList[itemIndex].quantity - amount;
+            if (reminder <= 0)
+                inventoryItemsList[itemIndex] = InventoryItem.GetEmptyItem();
+            else
+                inventoryItemsList[itemIndex] = inventoryItemsList[itemIndex]
+                    .ChangeQuantity(reminder);
+            InformAboutChanges();
+        }
+    }
+
+    public void RemoveItem(ItemSO item, int quantity)
+    {
+        for (int i = 0; i < inventoryItemsList.Count; i++)
+        {
+            if (inventoryItemsList[i].item.ID == item.ID)
+            {
+                if (quantity <= inventoryItemsList[i].quantity)
+                {
+                    RemoveItem(i, quantity);
+                    quantity = 0;
+                }
+                else
+                {
+                    RemoveItem(i, inventoryItemsList[i].quantity);
+                    quantity -= inventoryItemsList[i].quantity;
+                }
+            }
+            if (quantity == 0)
+                return;
+        }
+        Debug.Log("Cannot remove all items");
+    }
+
+    #endregion
+
+    public void SwapItems(int itemIndex_1, int itemIndex_2)
+    {
+        InventoryItem item1 = inventoryItemsList[itemIndex_1];
+        inventoryItemsList[itemIndex_1] = inventoryItemsList[itemIndex_2];
+        inventoryItemsList[itemIndex_2] = item1;
+        InformAboutChanges();
+    }
+    public Dictionary<int, InventoryItem> GetCurrentInventoryState()
+    {
+        Dictionary<int, InventoryItem> returnValue = new Dictionary<int, InventoryItem>();
+        for (int i = 0; i < inventoryItemsList.Count; i++)
+        {
+            if (inventoryItemsList[i].IsEmpty) continue;
+            returnValue[i] = inventoryItemsList[i];
+        }
+        return returnValue;
+    }
+
+    public InventoryItem GetItemAt(int itemIndex)
+    {
+        return inventoryItemsList[itemIndex];
+    }
+
+    public int ExistsInInventory(ItemSO item, int quantity)
+    {
+        for (int i = 0; i < inventoryItemsList.Count; i++)
+        {
+            if (inventoryItemsList[i].IsEmpty) continue;
+
+            if (inventoryItemsList[i].item.ID == item.ID)
+            {
+                if (inventoryItemsList[i].quantity >= quantity)
+                    return i;
+                else 
+                    quantity -= inventoryItemsList[i].quantity;
+            }
+        }
+        return -1;
+    }
+
+    private void InformAboutChanges()
+    {
+        int i = 0;
+        foreach (var item in inventoryItemsList)
+        {
+            if (!item.IsEmpty)
+                inventoryUI.UpdateData(i, item.item.ItemImage, item.quantity);
+            i++;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.TryGetComponent<Item>(out Item item))
+        {
+            item.PickUp();
+            AddItem(item.InventoryItem, item.Quantity);
+        }
+    }
+
+}
+[System.Serializable]
+public struct InventoryItem // Struct can not be set to null, but can set to be empty by method
+{
+    public int quantity;
+    public ItemSO item;
+    public List<ItemParameter> itemState;
+    public bool IsEmpty => item == null;
+
+    public InventoryItem ChangeQuantity(int newQuantity)
+    {
+        return new InventoryItem
+        {
+            item = this.item,
+            quantity = newQuantity,
+            itemState = new List<ItemParameter>(this.itemState),
+        };
+    }
+
+    public static InventoryItem GetEmptyItem()
+    {
+        return new InventoryItem
+        {
+            item = null,
+            quantity = 0,
+            itemState = new List<ItemParameter>(),
+        };
     }
 }
+
+

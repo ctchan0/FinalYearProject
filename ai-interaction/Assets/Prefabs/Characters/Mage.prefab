@@ -17,8 +17,6 @@ GameObject:
   - component: {fileID: 2860089879919105782}
   - component: {fileID: 231361837984078713}
   - component: {fileID: 801322493235317183}
-  - component: {fileID: 6092426385084540637}
-  - component: {fileID: 7890116068475137231}
   m_Layer: 0
   m_Name: Mage
   m_TagString: Adventurer
@@ -353,39 +351,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &6092426385084540637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 849493518309142333}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27218bf23aea0b04b93537a97bacbf24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  throwPos: {fileID: 0}
-  throwForce: 2000
-  inventoryData: {fileID: 0}
---- !u!114 &7890116068475137231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 849493518309142333}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 290e423e986bb5b48b9682aeffbc8450, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inventoryUI: {fileID: 0}
-  inventoryData: {fileID: 11400000, guid: 5932f6976218ba447806a231588104f9, type: 2}
-  initialItems: []
-  dropClip: {fileID: 8300000, guid: 8d0923a0cf2c20f4790c77e85a27e518, type: 3}
-  audioSource: {fileID: 801322493235317183}
-  pickDropSystem: {fileID: 6092426385084540637}
 --- !u!1 &3169614595074961824
 GameObject:
   m_ObjectHideFlags: 0

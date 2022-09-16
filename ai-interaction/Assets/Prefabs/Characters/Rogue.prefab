@@ -466,8 +466,6 @@ GameObject:
   - component: {fileID: 1740123138924115010}
   - component: {fileID: 1637287050504839482}
   - component: {fileID: 1365868058363982387}
-  - component: {fileID: 6483050840657795455}
-  - component: {fileID: 7694110773688415837}
   - component: {fileID: 1743907333319526909}
   m_Layer: 0
   m_Name: Rogue
@@ -770,39 +768,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &6483050840657795455
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7677691942469578676}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27218bf23aea0b04b93537a97bacbf24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  throwPos: {fileID: 0}
-  throwForce: 2000
-  inventoryData: {fileID: 0}
---- !u!114 &7694110773688415837
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7677691942469578676}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 290e423e986bb5b48b9682aeffbc8450, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inventoryUI: {fileID: 0}
-  inventoryData: {fileID: 0}
-  initialItems: []
-  dropClip: {fileID: 0}
-  audioSource: {fileID: 0}
-  pickDropSystem: {fileID: 0}
 --- !u!114 &1743907333319526909
 MonoBehaviour:
   m_ObjectHideFlags: 0

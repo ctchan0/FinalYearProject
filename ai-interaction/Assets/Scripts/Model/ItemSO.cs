@@ -11,7 +11,7 @@ namespace Inventory.Model
         [field: SerializeField]
         public bool IsStackable { get; set; }
 
-        public int ID => GetInstanceID();
+        public int ID => GetInstanceID(); // a key to identify
 
         [field: SerializeField]
         public int MaxStackSize { get; set; } = 1;

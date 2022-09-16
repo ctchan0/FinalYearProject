@@ -232,14 +232,8 @@ public class AdventurerAgent : Agent
         {
             m_Shoot = false;
 
-            if (currentArrow == null)
-            {
-                currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
-                currentArrow.SetActive(true);
-                currentArrow.GetComponent<Projectile>().belonger = this;
-                currentArrow.transform.SetParent(this.transform);
-            }
-            currentArrow.GetComponent<Projectile>().shoot = true;
+            if (currentArrow)
+                currentArrow.GetComponent<Projectile>().shoot = true;
 
             yield return new WaitForSeconds(coolDownTime);
             currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);

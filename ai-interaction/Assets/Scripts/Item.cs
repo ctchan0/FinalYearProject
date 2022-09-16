@@ -27,14 +27,9 @@ public class Item : MonoBehaviour
         
     }
 
-    public void DestroyItem()
+    public void PickUp()
     {
         GetComponent<Collider>().enabled = false;
-        AnimateItemPickUp();
-    }
-
-    private void AnimateItemPickUp()
-    {
         audioSource.Play();
         StartCoroutine(AnimateItemScale(transform.localScale, Vector3.zero, pickDuration));
     }
