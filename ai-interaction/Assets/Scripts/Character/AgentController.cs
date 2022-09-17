@@ -6,19 +6,27 @@ using UnityEngine.InputSystem;
 public class AgentController : MonoBehaviour
 {
     public InputAction moveControls;
-    public InputAction action;
-    Vector2 dir = Vector2.zero;
+    public InputAction attack;
+    public InputAction useItem_1;
+    public InputAction useItem_2;
+    public InputAction useItem_3;
 
     private void OnEnable()
     {
         moveControls.Enable();
-        action.Enable();
+        attack.Enable();
+        useItem_1.Enable();
+        useItem_2.Enable();
+        useItem_3.Enable();
     }
 
     private void OnDisbale()
     {
         moveControls.Disable();
-        action.Disable();
+        attack.Disable();
+        useItem_1.Disable();
+        useItem_2.Disable();
+        useItem_3.Disable();
     }
 
     void Update()
@@ -31,8 +39,25 @@ public class AgentController : MonoBehaviour
         return moveControls.ReadValue<Vector2>();
     }
 
-    public bool ActionIsTriggered()
+    public bool AttackIsTriggered()
     {
-        return action.ReadValue<float>() > 0;
+        return attack.ReadValue<float>() > 0;
+    }
+
+    public int GetItemIndex()
+    {
+        if (useItem_1.ReadValue<float>() > 0)
+        {
+            return 1;
+        }
+        if (useItem_2.ReadValue<float>() > 0)
+        {
+            return 2;
+        }
+        if (useItem_3.ReadValue<float>() > 0)
+        {
+            return 3;
+        }
+        return 0; // don't use item
     }
 }

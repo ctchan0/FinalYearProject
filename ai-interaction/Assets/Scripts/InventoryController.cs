@@ -14,6 +14,8 @@ public class InventoryController : MonoBehaviour
     public int Size = 3;
     public List<InventoryItem> inventoryItemsList = new List<InventoryItem>();
 
+    private AudioSource m_AudioSource;
+
     private void Awake()
     {
         Initialize();
@@ -28,6 +30,10 @@ public class InventoryController : MonoBehaviour
         {
             print(this.gameObject + ": Missing InventoryUI");
         }
+
+        m_AudioSource = GetComponent<AudioSource>();
+        if (!m_AudioSource)
+            print(this.gameObject + ": Missing AudioSource");
     }
 
     #region DisplayInvenotry
@@ -209,6 +215,26 @@ public class InventoryController : MonoBehaviour
         inventoryItemsList[itemIndex_2] = item1;
         InformAboutChanges();
     }
+
+    public void PerformItemAction(int itemIndex)
+    {
+        InventoryItem inventoryItem = GetItemAt(itemIndex);
+        if (inventoryItem.IsEmpty) return;
+
+        IDestroyableItem destroyableItem = inventoryItem.item as IDestroyableItem;
+        if (destroyableItem != null)
+        {
+            RemoveItem(itemIndex, 1);
+        }
+        
+        IItemAction itemAction = inventoryItem.item as IItemAction;
+        if (itemAction != null)
+        {
+            itemAction.PerformAction(this.gameObject, inventoryItem.itemState);
+            m_AudioSource.PlayOneShot(itemAction.actionSFX);
+        }
+    }
+
     public Dictionary<int, InventoryItem> GetCurrentInventoryState()
     {
         Dictionary<int, InventoryItem> returnValue = new Dictionary<int, InventoryItem>();
@@ -223,6 +249,15 @@ public class InventoryController : MonoBehaviour
     public InventoryItem GetItemAt(int itemIndex)
     {
         return inventoryItemsList[itemIndex];
+    }
+
+    public bool CanUseItem(int itemIndex)
+    {
+        InventoryItem inventoryItem = GetItemAt(itemIndex);
+        if (inventoryItem.IsEmpty) return false;
+        IItemAction itemAction = inventoryItem.item as IItemAction;
+        if (itemAction == null) return false;
+        else return true;
     }
 
     public int ExistsInInventory(ItemSO item, int quantity)
@@ -266,6 +301,7 @@ public class InventoryController : MonoBehaviour
         {
             if (item.canPick && GetComponent<AdventurerAgent>().isDead == false)
             {
+                this.GetComponent<AdventurerAgent>().CollectResources();
                 int reminder = AddItem(item.InventoryItem, item.Quantity);
                 if (reminder > 0)
                 {

@@ -1156,9 +1156,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: 1ecfe7aecc948004582869956b3b21c3, type: 3}
   m_InferenceDevice: 3
-  m_BehaviorType: 0
+  m_BehaviorType: 1
   m_BehaviorName: Monster
   TeamId: 1
   m_UseChildSensors: 1
@@ -1262,22 +1262,31 @@ MonoBehaviour:
       m_Action: Move Controls
       m_Flags: 8
     m_Flags: 0
-  action:
-    m_Name: Action
+  attack:
+    m_Name: Attack
     m_Type: 0
     m_ExpectedControlType: 
-    m_Id: 34af107f-7da5-4166-821b-ab39d01cf6de
+    m_Id: e1ea68c9-0973-4882-8ed7-e772fc92cd7c
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Id: c15db0a1-baf6-458f-91f9-ac67698b74e7
+      m_Id: 041e91d1-8454-4cc1-9fae-45e85542652f
       m_Path: <Keyboard>/space
       m_Interactions: 
       m_Processors: 
       m_Groups: 
-      m_Action: Action
+      m_Action: Attack
       m_Flags: 0
+    m_Flags: 0
+  itemControls:
+    m_Name: Item Controls
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 909894ca-4f43-4bbf-879e-fab1d16a3668
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
     m_Flags: 0
 --- !u!114 &3177449171097193627
 MonoBehaviour:

@@ -50,6 +50,8 @@ public class AdventurerAgent : Agent
     Transform shootPos;
     bool m_Shoot = true;
 
+    bool m_Use = true;
+
     public override void Initialize()
     {
         m_EnvController = GetComponentInParent<EnvController>();
@@ -74,6 +76,8 @@ public class AdventurerAgent : Agent
 
         SetResetParameters();
     }
+
+    #region Reset
     protected void SetResetParameters()
     {
         SetAgentScale();
@@ -117,6 +121,10 @@ public class AdventurerAgent : Agent
         m_HealthBar.SetMaxHealth(maxHealth);
     }
 
+    #endregion
+
+    #region Health
+
     public void GetDamage(int damage)
     {
         currentHealth -= damage;
@@ -145,10 +153,12 @@ public class AdventurerAgent : Agent
         m_HealthBar.SetHealth(currentHealth);
     }
 
+    #endregion
+
+    #region Action
     private void MoveAgent(ActionBuffers actionBuffers)
     {
         var continuousActions = actionBuffers.ContinuousActions;
-        var discreteActions = actionBuffers.DiscreteActions;
 
         // movement
         var forward = Mathf.Clamp(continuousActions[0], -0.5f, 1f);
@@ -163,8 +173,12 @@ public class AdventurerAgent : Agent
 
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
+    }
 
-        // skills
+    private void UseBasicAttack(ActionBuffers actionBuffers)
+    {
+        var discreteActions = actionBuffers.DiscreteActions;
+
         bool actionCommand = discreteActions[0] > 0;
         if (actionCommand)
         {
@@ -190,11 +204,30 @@ public class AdventurerAgent : Agent
                     Debug.Log(this.gameObject + " has unknown class ");
                     break;
             }
-        }
-        else
-        {
-           
         }  
+    }
+
+    private void UseItem(ActionBuffers actionBuffers)
+    {
+        var discreteActions = actionBuffers.DiscreteActions;
+        int itemIndex = discreteActions[1];  // The size of discreteActions[1] must same as the size of inventory + 1 !!!!!!!!!!!!
+        
+        if (itemIndex == 0) return;
+
+        if (m_Use && m_InventoryController.CanUseItem(itemIndex-1))
+        {
+            // use what item and add it to observation
+            // AddReward(0.2f);
+            StartCoroutine(UseItem(itemIndex-1, 1f)); 
+        }
+    }
+
+    private IEnumerator UseItem(int itemIndex, float coolDownTime)
+    {
+        m_Use = false;
+        m_InventoryController.PerformItemAction(itemIndex); 
+        yield return new WaitForSeconds(coolDownTime);
+        m_Use = true;
     }
 
     private IEnumerator UseSkill(string skill, float coolDownTime)
@@ -256,6 +289,9 @@ public class AdventurerAgent : Agent
         }
     }
 
+    #endregion
+
+    #region Reward
     public void DealDamage(MonsterAgent target, int damage)
     {
         if (damage > target.maxHealth)
@@ -293,6 +329,13 @@ public class AdventurerAgent : Agent
             }
         }
     }
+
+    public void CollectResources()
+    {
+        AddReward(0.5f);
+    }
+
+    #endregion
 
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -337,6 +380,8 @@ public class AdventurerAgent : Agent
     {
         // Move the agent using the action.
         MoveAgent(actionBuffers);
+        UseBasicAttack(actionBuffers);
+        UseItem(actionBuffers);
         
         StayAlive();
     }
@@ -351,7 +396,8 @@ public class AdventurerAgent : Agent
 
             // Remember to add discrete action when using !!!!!!!!
             var discreteActionsOut = actionsOut.DiscreteActions;
-            discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
+            discreteActionsOut[0] = agentControls.AttackIsTriggered() ? 1 : 0;
+            discreteActionsOut[1] = agentControls.GetItemIndex();
         }
     }
 }

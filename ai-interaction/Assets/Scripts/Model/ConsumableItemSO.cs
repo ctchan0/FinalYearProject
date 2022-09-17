@@ -24,11 +24,6 @@ namespace Inventory.Model
         }
     }
 
-    public interface IDestroyableItem
-    {
-        
-    }
-
     public interface IItemAction
     {
         public string ActionName { get; }

@@ -173,7 +173,7 @@ public class MonsterAgent : Agent
             continuousActionsOut[0] = agentControls.GetVector().y;
 
             var discreteActionsOut = actionsOut.DiscreteActions;
-            discreteActionsOut[0] = agentControls.ActionIsTriggered() ? 1 : 0;
+            discreteActionsOut[0] = agentControls.AttackIsTriggered() ? 1 : 0;
         }
     }
 }

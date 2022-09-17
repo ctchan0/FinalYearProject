@@ -89,12 +89,12 @@ MonoBehaviour:
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
-      BranchSizes: 02000000
+      BranchSizes: 0200000004000000
     VectorActionSize: 
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: a5fac4c7af637e044b613742ca25da00, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 3
   m_BehaviorType: 1
   m_BehaviorName: Barbarian
@@ -204,21 +204,72 @@ MonoBehaviour:
       m_Action: Move Controls
       m_Flags: 8
     m_Flags: 0
-  action:
-    m_Name: Action
+  attack:
+    m_Name: Attack
     m_Type: 0
-    m_ExpectedControlType: Button
-    m_Id: 19c2c5dd-9f54-495a-a142-87f575796e2e
+    m_ExpectedControlType: 
+    m_Id: e1ea68c9-0973-4882-8ed7-e772fc92cd7c
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Id: 10df73bd-df08-406e-b6b7-2202c830aee2
+      m_Id: 041e91d1-8454-4cc1-9fae-45e85542652f
       m_Path: <Keyboard>/space
       m_Interactions: 
       m_Processors: 
       m_Groups: 
-      m_Action: Action
+      m_Action: Attack
+      m_Flags: 0
+    m_Flags: 0
+  useItem_1:
+    m_Name: Use Item_1
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: fd810d60-9143-4a79-8707-890671e56da1
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 942df074-70f8-4405-8f46-bfd269165168
+      m_Path: <Keyboard>/1
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Use Item_1
+      m_Flags: 0
+    m_Flags: 0
+  useItem_2:
+    m_Name: Use Item_2
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 7f428172-5c1f-4bd0-b8bf-2d24c812bea5
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 40f2397f-4e5e-4fc6-8441-9d0aecc7633f
+      m_Path: <Keyboard>/2
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Use Item_2
+      m_Flags: 0
+    m_Flags: 0
+  useItem_3:
+    m_Name: Use Item_3
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 91f03953-0fd2-44d0-a829-635996a5ede2
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 7e160423-c33a-4a58-a2e5-0b21d471f054
+      m_Path: <Keyboard>/3
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Use Item_3
       m_Flags: 0
     m_Flags: 0
 --- !u!114 &1275012485181040034

@@ -84,15 +84,6 @@ public class BreakableObject : MonoBehaviour
         }
     }
 
-    public bool CloseTo(GameObject target)
-    {
-        if ((target.transform.position - this.transform.position).magnitude < 1f)
-        {
-            return true;
-        }
-        else return false;
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if (tag == "Breakable" && other.gameObject.CompareTag(toolName))

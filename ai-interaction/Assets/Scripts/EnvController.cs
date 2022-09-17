@@ -72,7 +72,8 @@ public class EnvController : MonoBehaviour
     public GridLayout m_GridLayout;
     private Grid grid;
 
-    public List<InventoryItem> ItemCollectionList = new List<InventoryItem>();
+    public List<InventoryItem> ItemCollectionList = new List<InventoryItem>(); // adventurers need to fulfil the list reuirement to win
+    public List<InventoryItem> ItemInitiatorList = new List<InventoryItem>(); // items provided at the start
 
     public List<AdventurerInfo> AdventurersList = new List<AdventurerInfo>();
     // private Dictionary<AdventurerAgent, AdventurerInfo> m_AdventurerDict = new Dictionary<AdventurerAgent, AdventurerInfo>();
@@ -254,6 +255,15 @@ public class EnvController : MonoBehaviour
                 chest.Reset();
         }
 
+        foreach (var item in ItemInitiatorList)
+        {
+            if (!item.IsEmpty)
+            {
+                var i = Instantiate(item.item.ItemPrefab, GetRandomSpawnPos(), GetRandomRot());
+                i.GetComponent<Item>().Quantity = item.quantity;
+            }
+        }
+
         StartCoroutine(CheckAllResourcesGathered(1f));
     }
 
@@ -343,7 +353,7 @@ public class EnvController : MonoBehaviour
             m_NumberOfRemainingAdventurers--;
             character.SetActive(false);
             
-            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Barbarian)
+            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Barbarian || adventurer.m_Class == Class.Rogue)
             {
                 AceGroup(0);
             }

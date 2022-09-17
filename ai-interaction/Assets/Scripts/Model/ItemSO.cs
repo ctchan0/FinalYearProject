@@ -33,6 +33,10 @@ namespace Inventory.Model
         public List<ItemParameter> DefaultParametersList { get; set; }
     }
 
+    public interface IDestroyableItem
+    {
+    }
+
     [Serializable]
     public struct ItemParameter : IEquatable<ItemParameter>
     {
