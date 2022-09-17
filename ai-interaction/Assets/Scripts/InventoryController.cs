@@ -8,19 +8,25 @@ using System.Linq;
 public class InventoryController : MonoBehaviour
 {
     public InputAction inventoryControls;
-    public InventoryUI inventoryUI;
+    private InventoryUI m_InventoryUI;
     private bool display = true;
 
-    public List<InventoryItem> inventoryItemsList = new List<InventoryItem>();
     public int Size = 3;
+    public List<InventoryItem> inventoryItemsList = new List<InventoryItem>();
 
     private void Awake()
     {
         Initialize();
-        if (inventoryUI)
+        m_InventoryUI = GetComponentInChildren<InventoryUI>();
+        if (m_InventoryUI)
         {
             inventoryControls.performed += _ => Display();
-            inventoryUI.GetComponent<InventoryUI>().Initialize(Size);
+            m_InventoryUI.Initialize(Size);
+            InformAboutChanges();
+        }
+        else
+        {
+            print(this.gameObject + ": Missing InventoryUI");
         }
     }
 
@@ -37,9 +43,9 @@ public class InventoryController : MonoBehaviour
     private void Display()
     {
         if (!display)
-            inventoryUI.Show();
+            m_InventoryUI.Show();
         else 
-            inventoryUI.Hide();
+            m_InventoryUI.Hide();
         display = !display;
     }
 
@@ -48,11 +54,35 @@ public class InventoryController : MonoBehaviour
     public void Initialize()
     {
         int init = inventoryItemsList.Count;
-        if (init == 0)
-            InformAboutChanges();
-        for (int i = init; i <= Size - init; i++) {
+        for (int i = init; i < Size; i++) {
             inventoryItemsList.Add(InventoryItem.GetEmptyItem());
         }
+    }
+
+    public void Reset()
+    {
+        if (inventoryItemsList.Count == 0) return;
+        for (int i = 0; i < Size; i++) {
+            inventoryItemsList[i] = InventoryItem.GetEmptyItem();
+        }
+        InformAboutChanges();
+    }
+
+    public void Clear()
+    {
+        foreach (var item in inventoryItemsList)
+        {
+            if (!item.IsEmpty) // always check if item is empty
+            {
+                var randomPosX = Random.Range(-0.5f, 0.5f);
+                var randomPosZ = Random.Range(-0.5f, 0.5f);
+                var dropItem = Instantiate(item.item.ItemPrefab, 
+                                            this.transform.position + new Vector3(randomPosX, 0f, randomPosZ), 
+                                            Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0));
+                dropItem.GetComponent<Item>().Quantity = item.quantity;
+            }
+        }
+        Reset();
     }
 
     #region AddItem
@@ -209,16 +239,23 @@ public class InventoryController : MonoBehaviour
                     quantity -= inventoryItemsList[i].quantity;
             }
         }
-        return -1;
+        return -1; // items not found or not enough
     }
 
     private void InformAboutChanges()
     {
+        if (!m_InventoryUI)
+        {
+            print(this.gameObject + ": Missing InventoryUI");
+            return;
+        }
         int i = 0;
         foreach (var item in inventoryItemsList)
         {
             if (!item.IsEmpty)
-                inventoryUI.UpdateData(i, item.item.ItemImage, item.quantity);
+                m_InventoryUI.UpdateData(i, item.item.ItemImage, item.quantity);
+            else 
+                m_InventoryUI.ClearData(i);
             i++;
         }
     }
@@ -226,8 +263,18 @@ public class InventoryController : MonoBehaviour
     private void OnTriggerEnter(Collider other) {
         if (other.TryGetComponent<Item>(out Item item))
         {
-            item.PickUp();
-            AddItem(item.InventoryItem, item.Quantity);
+            if (item.canPick && GetComponent<AdventurerAgent>().isDead == false)
+            {
+                int reminder = AddItem(item.InventoryItem, item.Quantity);
+                if (reminder > 0)
+                {
+                    item.Quantity = reminder;
+                }
+                else
+                {
+                    item.PickUp();
+                }
+            }
         }
     }
 

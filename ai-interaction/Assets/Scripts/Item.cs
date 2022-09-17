@@ -34,11 +34,10 @@ public class Item : MonoBehaviour
         StartCoroutine(AnimateItemScale(transform.localScale, Vector3.zero, pickDuration));
     }
 
-    public void AnimateItemThrow(Transform throwPos, float throwForce)
+    public void AnimateItemThrow()
     {
         StartCoroutine(DisablePickUp(1f));
         StartCoroutine(AnimateItemScale(Vector3.zero, transform.localScale, throwDuration));
-        GetComponent<Rigidbody>().AddForce(throwPos.forward * throwForce);
     }
 
     private IEnumerator AnimateItemScale(Vector3 startScale, Vector3 endScale, float duration)
@@ -59,5 +58,10 @@ public class Item : MonoBehaviour
         canPick = false;
         yield return new WaitForSeconds(waitTime);
         canPick = true;
+    }
+
+    public void ClearItem()
+    {
+        Destroy(this.gameObject);
     }
 }

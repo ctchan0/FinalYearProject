@@ -27,11 +27,18 @@ public class Chest : MonoBehaviour
             {
                 animator.SetTrigger("Unlock");
                 closed = false;
-                if (treasure)
-                {
-                    Instantiate(treasure, this.transform.position, this.transform.rotation);
-                }
+                StartCoroutine(TreasureSpawn(0.5f));
+                
             }
+        }
+    }
+
+    private IEnumerator TreasureSpawn(float waitTime) 
+    {
+        yield return new WaitForSeconds(waitTime);
+        if (treasure)
+        {
+            Instantiate(treasure, this.transform.position, this.transform.rotation);
         }
     }
 }

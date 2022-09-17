@@ -34,6 +34,8 @@ public class AdventurerAgent : Agent
     public bool isDead = false;
     private HealthBar m_HealthBar;
 
+    private InventoryController m_InventoryController;
+
     /* Mage skills */
     [Header("Mage's Properties:")]
     public GameObject laser;
@@ -57,7 +59,9 @@ public class AdventurerAgent : Agent
 
         m_HealthBar = GetComponentInChildren<HealthBar>();
         if (!m_HealthBar)
-            print("Missing health bar");
+            print(this.gameObject + ": Missing health bar");
+
+        m_InventoryController = GetComponent<InventoryController>();
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
 
@@ -77,6 +81,12 @@ public class AdventurerAgent : Agent
             SetLaserLength();
         SetHealth();
         SetSkills();
+        SetInventory();
+    }
+
+    public void SetInventory()
+    {
+        m_InventoryController.Reset();
     }
 
     public void SetSkills()
@@ -102,6 +112,7 @@ public class AdventurerAgent : Agent
     }
     private void SetHealth()
     {
+        isDead = false;
         currentHealth = maxHealth;
         m_HealthBar.SetMaxHealth(maxHealth);
     }
@@ -112,7 +123,9 @@ public class AdventurerAgent : Agent
         m_HealthBar.SetHealth(currentHealth);
         if (currentHealth <= 0)
         {
-            isDead = true;
+            isDead = true; // always come first 
+            
+            m_InventoryController.Clear();
             m_EnvController.Eliminate(this.gameObject);
             AddReward(-worth);
 
@@ -130,12 +143,6 @@ public class AdventurerAgent : Agent
         if (currentHealth > maxHealth)
             currentHealth = maxHealth;
         m_HealthBar.SetHealth(currentHealth);
-    }
-
-    public void ResetHealth()  // controls in env_controller
-    {
-        currentHealth = maxHealth;
-        isDead = false;
     }
 
     private void MoveAgent(ActionBuffers actionBuffers)

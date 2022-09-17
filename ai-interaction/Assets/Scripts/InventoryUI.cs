@@ -12,7 +12,9 @@ public class InventoryUI : MonoBehaviour
         {
             var uiItem = Instantiate(itemPrefab, itemPrefab.transform.position, itemPrefab.transform.rotation);
             uiItem.transform.SetParent(this.transform);
+            uiItem.transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, 0); // avoid disaplacement problems
             uiItem.transform.localScale = Vector3.one;
+
             listOfUIItems.Add(uiItem);
         }
     }
@@ -32,6 +34,14 @@ public class InventoryUI : MonoBehaviour
         if (listOfUIItems.Count > itemIndex)
         {
             listOfUIItems[itemIndex].SetData(itemImage, itemQuantity);
+        }
+    }
+
+    public void ClearData(int itemIndex)
+    {
+        if (listOfUIItems.Count > itemIndex)
+        {
+            listOfUIItems[itemIndex].ResetData();
         }
     }
 

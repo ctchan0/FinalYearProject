@@ -188,6 +188,13 @@ public class EnvController : MonoBehaviour
         // Reset counter
         m_ResetTimer = 0;
 
+        // Clear all items
+        var remainingItems = FindObjectsOfType<Item>();
+        foreach (var item in remainingItems)
+        {
+            item.ClearItem();
+        }
+
         // Reset Remaining
         m_NumberOfRemainingAdventurers = AdventurersList.Count;
         m_NumberOfRemainingMonsters = MonstersList.Count;
@@ -210,7 +217,6 @@ public class EnvController : MonoBehaviour
             
             // Reborn Agents
             item.Adventurer.gameObject.SetActive(true);
-            item.Adventurer.ResetHealth();
             m_AdventurerGroup.RegisterAgent(item.Adventurer);
         }
 
