@@ -260,6 +260,7 @@ public class EnvController : MonoBehaviour
             if (!item.IsEmpty)
             {
                 var i = Instantiate(item.item.ItemPrefab, GetRandomSpawnPos(), GetRandomRot());
+                i.transform.SetParent(this.transform); // remember to set parent to the corresponding environment
                 i.GetComponent<Item>().Quantity = item.quantity;
             }
         }

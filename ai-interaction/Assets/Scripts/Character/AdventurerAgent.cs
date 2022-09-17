@@ -48,7 +48,7 @@ public class AdventurerAgent : Agent
     public GameObject arrowPrefab;
     GameObject currentArrow;
     Transform shootPos;
-    bool m_Shoot = true;
+    bool m_Attack = true;
 
     bool m_Use = true;
 
@@ -95,7 +95,7 @@ public class AdventurerAgent : Agent
 
     public void SetSkills()
     {
-        m_Shoot = true;
+        m_Attack = true;
 
         if (arrowPrefab != null && currentArrow == null)
         {
@@ -189,15 +189,15 @@ public class AdventurerAgent : Agent
                     break;
 
                 case Class.Mage:
-                    if (m_Shoot)
-                        StartCoroutine(UseSkill("ShootLaser", 2f));
+                    if (m_Attack)
+                        StartCoroutine(Attack(2f));
                     break;
                 case Class.Knight:
                     break;
 
                 case Class.Rogue:
-                    if (m_Shoot)
-                        StartCoroutine(UseSkill("ShootArrow", 2f));
+                    if (m_Attack)
+                        StartCoroutine(Attack(2f));
                     break;
 
                 default:
@@ -230,12 +230,11 @@ public class AdventurerAgent : Agent
         m_Use = true;
     }
 
-    private IEnumerator UseSkill(string skill, float coolDownTime)
+    private IEnumerator Attack(float coolDownTime)
     {
-        if (skill == "ShootLaser")
+        m_Attack = false;
+        if (m_Class == Class.Mage)
         {
-            m_Shoot = false;
-            
             // Shoot Laser
             laser.SetActive(true);
             laser.transform.localScale = new Vector3(1f, 1f, laserLength);
@@ -266,12 +265,9 @@ public class AdventurerAgent : Agent
             laser.SetActive(false);
 
             yield return new WaitForSeconds(coolDownTime);
-            m_Shoot = true;
         }
-        else if (skill == "ShootArrow")
+        else if (m_Class == Class.Rogue)
         {
-            m_Shoot = false;
-
             if (currentArrow)
                 currentArrow.GetComponent<Projectile>().shoot = true;
 
@@ -280,13 +276,12 @@ public class AdventurerAgent : Agent
             currentArrow.SetActive(true);
             currentArrow.GetComponent<Projectile>().belonger = this;
             currentArrow.transform.SetParent(this.transform);
-
-            m_Shoot = true;
         }
         else
         {
             print("No such skill");
         }
+        m_Attack = true;
     }
 
     #endregion
@@ -346,7 +341,7 @@ public class AdventurerAgent : Agent
                 break;
 
             case Class.Mage:
-                sensor.AddObservation(m_Shoot);
+                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
                 foreach (var item in m_EnvController.AdventurersList)
@@ -363,7 +358,7 @@ public class AdventurerAgent : Agent
 
             case Class.Rogue:
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
-                sensor.AddObservation(m_Shoot);
+                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(this.currentHealth);
                 break;
 
