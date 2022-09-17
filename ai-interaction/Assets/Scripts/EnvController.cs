@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.MLAgents;
 using UnityEngine;
+using Inventory.Model;
 using UnityEngine.Tilemaps;
 
 public class EnvController : MonoBehaviour
@@ -12,6 +13,8 @@ public class EnvController : MonoBehaviour
         public AdventurerAgent Adventurer;
         [HideInInspector]
         public Class Class;
+        [HideInInspector]
+        public InventoryController InventoryController; // take reference
         [HideInInspector]
         public Vector3 StartingPos;
         [HideInInspector]
@@ -37,7 +40,7 @@ public class EnvController : MonoBehaviour
     [System.Serializable]
     public class ResourceInfo
     {
-        public BreakableObject Resource;
+        public GameObject Resource;
         [HideInInspector]
         public Vector3 StartingPos;
         [HideInInspector]
@@ -69,6 +72,8 @@ public class EnvController : MonoBehaviour
     public GridLayout m_GridLayout;
     private Grid grid;
 
+    public List<InventoryItem> ItemCollectionList = new List<InventoryItem>();
+
     public List<AdventurerInfo> AdventurersList = new List<AdventurerInfo>();
     // private Dictionary<AdventurerAgent, AdventurerInfo> m_AdventurerDict = new Dictionary<AdventurerAgent, AdventurerInfo>();
     public List<MonsterInfo> MonstersList = new List<MonsterInfo>();
@@ -97,6 +102,7 @@ public class EnvController : MonoBehaviour
         foreach (var item in AdventurersList)
         {
             item.Class = item.Adventurer.m_Class;
+            item.InventoryController = item.Adventurer.GetComponent<InventoryController>();
             item.StartingPos = item.Adventurer.transform.position;
             item.StartingRot = item.Adventurer.transform.rotation;
             item.Rb = item.Adventurer.GetComponent<Rigidbody>();
@@ -189,7 +195,7 @@ public class EnvController : MonoBehaviour
         m_ResetTimer = 0;
 
         // Clear all items
-        var remainingItems = FindObjectsOfType<Item>();
+        var remainingItems = GetComponentsInChildren<Item>();
         foreach (var item in remainingItems)
         {
             item.ClearItem();
@@ -242,8 +248,13 @@ public class EnvController : MonoBehaviour
             var rot = item.StartingRot;
             item.Resource.transform.SetPositionAndRotation(pos, rot);
 
-            item.Resource.Respawn();
+            if (item.Resource.TryGetComponent<BreakableObject>(out BreakableObject breakableObject))
+                breakableObject.Respawn();
+            else if (item.Resource.TryGetComponent<Chest>(out Chest chest))
+                chest.Reset();
         }
+
+        StartCoroutine(CheckAllResourcesGathered(1f));
     }
 
     /// <summary>
@@ -254,6 +265,41 @@ public class EnvController : MonoBehaviour
         m_GroundRenderer.material = mat;
         yield return new WaitForSeconds(time); // Wait for 2 sec
         m_GroundRenderer.material = m_GroundMaterial;
+    }
+
+    IEnumerator CheckAllResourcesGathered(float checkTimeInterval)
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(checkTimeInterval);
+            if (CollectionCompleted(ItemCollectionList))
+            {
+                GatherAllResources();
+                break;
+            }
+        }
+    }
+
+    public bool CollectionCompleted(List<InventoryItem> collectionList) // can display the progress of completion later
+    {
+        foreach (var item in collectionList)
+        {
+            if (!ResourcesChecked(item.item, item.quantity)) 
+                return false;
+        }
+        return true;
+    }
+
+    public bool ResourcesChecked(ItemSO item, int quantity) // return true if satisfy the quantity requirements
+    {
+        int count = quantity;
+        foreach (var adventurer in AdventurersList)
+        {
+            count = adventurer.InventoryController.ExistsInInventory(item, count);
+            if (count == 0)
+                return true;
+        }
+        return false;
     }
 
     public void GatherAllResources() // adventurers win

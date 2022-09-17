@@ -59,17 +59,22 @@ public class BreakableObject : MonoBehaviour
         int maxHits = afterHit.Length + 1;
         if (timesHit >= maxHits)
         {
-            // Successfully chopped a tree
+            // Get a resource
             agent.AddReward(1f);
-            m_EnvController.m_NumberOfRemainingResources--;
             m_EnvController.AddGroupReward(1, -0.2f);
+            m_EnvController.m_NumberOfRemainingResources--;
             this.gameObject.SetActive(false);
             if (resource)
-                    Instantiate(resource, 
-                        transform.position + resource.transform.position, 
-                        Quaternion.identity);
-            if (m_EnvController.m_NumberOfRemainingResources == 0)
-                m_EnvController.GatherAllResources();
+            {
+                var item = Instantiate(resource, 
+                            transform.position + resource.transform.position, 
+                            Quaternion.identity);
+                item.transform.SetParent(m_EnvController.transform);
+            }
+            else 
+            {
+                print(this.gameObject + ": Missing resource");
+            }
         }
         else
         {

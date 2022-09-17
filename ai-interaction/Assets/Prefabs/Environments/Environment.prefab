@@ -635,27 +635,38 @@ MonoBehaviour:
   UseRandomAgentRotation: 1
   UseRandomAgentPosition: 1
   m_GridLayout: {fileID: 1509747632868522376}
+  ItemCollectionList:
+  - quantity: 3
+    item: {fileID: 11400000, guid: 731f40ed8deb2d341a938a240f5909f8, type: 2}
+    itemState: []
+  - quantity: 1
+    item: {fileID: 11400000, guid: 97da8d9fcc3887345afb505df90c2164, type: 2}
+    itemState: []
   AdventurersList:
   - Adventurer: {fileID: 4085925200659187594}
     Class: 0
+    InventoryController: {fileID: 0}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Rb: {fileID: 0}
     Col: {fileID: 0}
   - Adventurer: {fileID: 8787335274189465413}
     Class: 0
+    InventoryController: {fileID: 0}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Rb: {fileID: 0}
     Col: {fileID: 0}
   - Adventurer: {fileID: 5133753735851578797}
     Class: 0
+    InventoryController: {fileID: 0}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Rb: {fileID: 0}
     Col: {fileID: 0}
   - Adventurer: {fileID: 3832931971983262574}
     Class: 0
+    InventoryController: {fileID: 0}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Rb: {fileID: 0}
@@ -682,15 +693,19 @@ MonoBehaviour:
     Rb: {fileID: 0}
     Col: {fileID: 0}
   ResourcesList:
-  - Resource: {fileID: 4779382196441171236}
+  - Resource: {fileID: 3913418873702915491}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Col: {fileID: 0}
-  - Resource: {fileID: 2157176911393095370}
+  - Resource: {fileID: 7634537647937857101}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Col: {fileID: 0}
-  - Resource: {fileID: 2157176911405579351}
+  - Resource: {fileID: 7634537647958664400}
+    StartingPos: {x: 0, y: 0, z: 0}
+    StartingRot: {x: 0, y: 0, z: 0, w: 0}
+    Col: {fileID: 0}
+  - Resource: {fileID: 2531395536583374825}
     StartingPos: {x: 0, y: 0, z: 0}
     StartingRot: {x: 0, y: 0, z: 0, w: 0}
     Col: {fileID: 0}
@@ -1337,20 +1352,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
---- !u!114 &2157176911405579351 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 656513452649547768, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
-  m_PrefabInstance: {fileID: 1509747634476284847}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 483e82ed278109b4e9bef26e0cd1dd51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &7113579810803973738 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8523959906274739653, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
+  m_PrefabInstance: {fileID: 1509747634476284847}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7634537647958664400 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9007446593042767743, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
   m_PrefabInstance: {fileID: 1509747634476284847}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1509747634488965426
@@ -1414,20 +1423,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
---- !u!114 &2157176911393095370 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 656513452649547768, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
-  m_PrefabInstance: {fileID: 1509747634488965426}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 483e82ed278109b4e9bef26e0cd1dd51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &7113579810850274551 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8523959906274739653, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
+  m_PrefabInstance: {fileID: 1509747634488965426}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7634537647937857101 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9007446593042767743, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
   m_PrefabInstance: {fileID: 1509747634488965426}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2730257802914576375
@@ -1487,6 +1490,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2423ce310de77a040b2dbfd9d962a4c5, type: 3}
+--- !u!1 &2531395536583374825 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 487094464624033822, guid: 2423ce310de77a040b2dbfd9d962a4c5, type: 3}
+  m_PrefabInstance: {fileID: 2730257802914576375}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7735792938088938310 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5672527484649868465, guid: 2423ce310de77a040b2dbfd9d962a4c5, type: 3}
@@ -1988,22 +1996,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
+--- !u!1 &3913418873702915491 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9007446593042767743, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
+  m_PrefabInstance: {fileID: 5426733409563230940}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4396798667863836441 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8523959906274739653, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
   m_PrefabInstance: {fileID: 5426733409563230940}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4779382196441171236 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 656513452649547768, guid: 6a749ef039f51c947a6ba7a76479fc16, type: 3}
-  m_PrefabInstance: {fileID: 5426733409563230940}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 483e82ed278109b4e9bef26e0cd1dd51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &7374521474601564952
 PrefabInstance:
   m_ObjectHideFlags: 0

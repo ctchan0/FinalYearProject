@@ -227,6 +227,7 @@ public class InventoryController : MonoBehaviour
 
     public int ExistsInInventory(ItemSO item, int quantity)
     {
+        int count = quantity;
         for (int i = 0; i < inventoryItemsList.Count; i++)
         {
             if (inventoryItemsList[i].IsEmpty) continue;
@@ -234,12 +235,12 @@ public class InventoryController : MonoBehaviour
             if (inventoryItemsList[i].item.ID == item.ID)
             {
                 if (inventoryItemsList[i].quantity >= quantity)
-                    return i;
+                    return 0; // all items are found
                 else 
-                    quantity -= inventoryItemsList[i].quantity;
+                    count -= inventoryItemsList[i].quantity;
             }
         }
-        return -1; // items not found or not enough
+        return count; // return remaining number of items not found
     }
 
     private void InformAboutChanges()

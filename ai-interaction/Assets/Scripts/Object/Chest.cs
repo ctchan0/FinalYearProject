@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class Chest : MonoBehaviour
 {
+    private EnvController m_EnvController;
     Animator animator;
     public GameObject treasure;
     [SerializeField] bool closed = true;
     // Start is called before the first frame update
     void Awake()
     {
+        m_EnvController = GetComponentInParent<EnvController>();
         animator = GetComponent<Animator>();
     }
 
@@ -27,8 +29,8 @@ public class Chest : MonoBehaviour
             {
                 animator.SetTrigger("Unlock");
                 closed = false;
+                m_EnvController.m_NumberOfRemainingResources--;
                 StartCoroutine(TreasureSpawn(0.5f));
-                
             }
         }
     }
@@ -38,7 +40,15 @@ public class Chest : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         if (treasure)
         {
-            Instantiate(treasure, this.transform.position, this.transform.rotation);
+            var item = Instantiate(treasure, this.transform.position, this.transform.rotation);
+            item.transform.SetParent(m_EnvController.transform);
         }
     }
+
+    public void Reset()
+    {
+        animator.ResetTrigger("Unlock");
+        closed = true;
+    }
+
 }
