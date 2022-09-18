@@ -87,7 +87,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 3
+    VectorObservationSize: 5
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
@@ -128,7 +128,9 @@ MonoBehaviour:
   worth: 0.3
   maxHealth: 3
   isDead: 0
+  axe: {fileID: 0}
   laser: {fileID: 0}
+  sword: {fileID: 0}
   shield: {fileID: 0}
   arrowPrefab: {fileID: 3638821168171941170}
 --- !u!114 &1740123138924115010

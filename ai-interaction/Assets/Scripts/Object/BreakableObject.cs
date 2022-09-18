@@ -53,16 +53,14 @@ public class BreakableObject : MonoBehaviour
         }
     }
 
-    private void HandleHit(AdventurerAgent agent) 
+    private void HandleHit(AdventurerAgent adventurer) 
     {
         timesHit++;
         int maxHits = afterHit.Length + 1;
         if (timesHit >= maxHits)
         {
-            // Get a resource
-            agent.AddReward(1f);
-            m_EnvController.AddGroupReward(1, -0.2f);
-            m_EnvController.m_NumberOfRemainingResources--;
+            // able to get a resource
+            adventurer.DiscoverResources();
             this.gameObject.SetActive(false);
             if (resource)
             {
@@ -79,7 +77,7 @@ public class BreakableObject : MonoBehaviour
         else
         {
             m_EnvController.AddGroupReward(1, -0.1f);
-            agent.AddReward(0.5f);
+            adventurer.AddReward(0.2f);
             ShowNextHit();
         }
     }
@@ -90,9 +88,9 @@ public class BreakableObject : MonoBehaviour
         {
             if (HitImmunity) return;
             other.transform.parent.
-                TryGetComponent<AdventurerAgent>(out AdventurerAgent agent);
-            if (!agent) return;
-            HandleHit(agent);
+                TryGetComponent<AdventurerAgent>(out AdventurerAgent adventurer);
+            if (!adventurer) return;
+            HandleHit(adventurer);
         }
     }
 }

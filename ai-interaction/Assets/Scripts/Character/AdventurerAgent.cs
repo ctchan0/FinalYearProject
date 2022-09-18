@@ -36,22 +36,24 @@ public class AdventurerAgent : Agent
 
     private InventoryController m_InventoryController;
 
-    [Header("Barbarian's Properties:")]
+    [Header("Barbarian")]
     public GameObject axe;
 
-    [Header("Mage's Properties:")]
+    [Header("Mage")]
     public GameObject laser;
     float laserLength;
 
-    [Header("Knight's Properties:")]
+    [Header("Knight")]
     public GameObject sword;
     public GameObject shield;
 
-    [Header("Rogue's Properties:")]
+    [Header("Rogue")]
     public GameObject arrowPrefab;
     GameObject currentArrow;
     Transform shootPos;
     bool m_Attack = true;
+
+    int ItemId;
     bool m_Use = true;
 
     public override void Initialize()
@@ -149,9 +151,15 @@ public class AdventurerAgent : Agent
 
     public void GetCure(int healAmount)
     {
+        int prvHealth = currentHealth;
+
         currentHealth += healAmount;
         if (currentHealth > maxHealth)
             currentHealth = maxHealth;
+
+        if (currentHealth != prvHealth)
+            AddReward((currentHealth - prvHealth) / maxHealth); // add rewards depend the amount of healing
+
         m_HealthBar.SetHealth(currentHealth);
     }
 
@@ -218,13 +226,15 @@ public class AdventurerAgent : Agent
         var discreteActions = actionBuffers.DiscreteActions;
         int itemIndex = discreteActions[1];  // The size of discreteActions[1] must same as the size of inventory + 1 !!!!!!!!!!!!
         
-        if (itemIndex == 0) return;
+        if (itemIndex == 0) return; // 0 respresents doing nothing
+        else itemIndex--; // else get the corresponding item index
 
-        if (m_Use && m_InventoryController.CanUseItem(itemIndex-1))
+        if (m_Use && m_InventoryController.CanUseItem(itemIndex))
         {
-            // use what item and add it to observation
             // AddReward(0.2f);
-            StartCoroutine(UseItem(itemIndex-1, 1f)); 
+            // current using item
+            ItemId = m_InventoryController.GetItemAt(itemIndex).item.ID;
+            StartCoroutine(UseItem(itemIndex, 1f)); 
         }
     }
 
@@ -318,8 +328,8 @@ public class AdventurerAgent : Agent
 
         if (target.isDead)
         {
-            AddReward(0.3f);
-            AddReward(1f / m_EnvController.MonstersList.Count);
+            AddReward(0.3f); // price of a monster
+            AddReward(1f / m_EnvController.MonstersList.Count); // bonus price
         }
     }
 
@@ -347,6 +357,13 @@ public class AdventurerAgent : Agent
         }
     }
 
+    public void DiscoverResources()
+    {
+        m_EnvController.m_NumberOfRemainingResources--;
+        AddReward(0.5f);
+        m_EnvController.AddGroupReward(1, -1f / m_EnvController.ResourcesList.Count); // monsters will lose some advantages
+    }
+
     public void CollectResources()
     {
         AddReward(0.5f);
@@ -356,33 +373,36 @@ public class AdventurerAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        sensor.AddObservation(m_Attack);
+        sensor.AddObservation(m_Use);
+        sensor.AddObservation(ItemId);
         switch (m_Class)
         {
             case Class.Barbarian:
-                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
+                sensor.AddObservation(this.currentHealth);
                 break;
 
             case Class.Mage:
-                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
                 foreach (var item in m_EnvController.AdventurersList)
                 {
-                    sensor.AddObservation(item.Adventurer.currentHealth);
+                    sensor.AddObservation(item.Adventurer.currentHealth); // currently 4 members
                 }
                 break;
 
             case Class.Knight:
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
-                sensor.AddObservation(shield.transform.position);
+                sensor.AddObservation(shield.transform.position); // count as 3 observations
+                sensor.AddObservation(this.currentHealth);
                 break;
 
             case Class.Rogue:
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
-                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(this.currentHealth);
+                
                 break;
 
             default:
@@ -414,7 +434,9 @@ public class AdventurerAgent : Agent
 
             // Remember to add discrete action when using !!!!!!!!
             var discreteActionsOut = actionsOut.DiscreteActions;
+            // Normal Attack
             discreteActionsOut[0] = agentControls.AttackIsTriggered() ? 1 : 0;
+            // Item Usage
             discreteActionsOut[1] = agentControls.GetItemIndex();
         }
     }

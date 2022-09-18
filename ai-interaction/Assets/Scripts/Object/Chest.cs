@@ -25,12 +25,13 @@ public class Chest : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Adventurer"))
         {
-            if (other.gameObject.GetComponent<AdventurerAgent>().m_Class == Class.Rogue && this.closed)
+            var adventurer = other.gameObject.GetComponent<AdventurerAgent>();
+            if (adventurer.m_Class == Class.Rogue && this.closed)
             {
-                animator.SetTrigger("Unlock");
+                animator.SetBool("Unlock", true);
                 closed = false;
-                m_EnvController.m_NumberOfRemainingResources--;
                 StartCoroutine(TreasureSpawn(0.5f));
+                adventurer.DiscoverResources();
             }
         }
     }
@@ -47,7 +48,7 @@ public class Chest : MonoBehaviour
 
     public void Reset()
     {
-        animator.ResetTrigger("Unlock");
+        animator.SetBool("Unlock", false);
         closed = true;
     }
 

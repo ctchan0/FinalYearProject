@@ -138,7 +138,7 @@ public class MonsterAgent : Agent
         {
             var adventurerAgent = other.transform.parent.GetComponent<AdventurerAgent>();
             AddReward(-0.1f);
-            adventurerAgent.AddReward(0.5f);
+            adventurerAgent.AddReward(0.5f); // successful defend
         }
     }
 
