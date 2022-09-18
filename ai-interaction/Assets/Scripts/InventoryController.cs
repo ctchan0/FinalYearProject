@@ -16,6 +16,8 @@ public class InventoryController : MonoBehaviour
 
     private AudioSource m_AudioSource;
 
+    private EnvController m_EnvController;
+
     private void Awake()
     {
         Initialize();
@@ -32,6 +34,7 @@ public class InventoryController : MonoBehaviour
         }
 
         m_AudioSource = GetComponent<AudioSource>();
+        m_EnvController = GetComponentInParent<EnvController>();
         if (!m_AudioSource)
             print(this.gameObject + ": Missing AudioSource");
     }
@@ -74,7 +77,7 @@ public class InventoryController : MonoBehaviour
         InformAboutChanges();
     }
 
-    public void Clear()
+    public void Clear() // clear inventory when adventurer is dead
     {
         foreach (var item in inventoryItemsList)
         {
@@ -85,6 +88,7 @@ public class InventoryController : MonoBehaviour
                 var dropItem = Instantiate(item.item.ItemPrefab, 
                                             this.transform.position + new Vector3(randomPosX, 0f, randomPosZ), 
                                             Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0));
+                dropItem.transform.SetParent(m_EnvController.transform);
                 dropItem.GetComponent<Item>().Quantity = item.quantity;
             }
         }

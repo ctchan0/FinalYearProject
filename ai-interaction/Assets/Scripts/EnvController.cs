@@ -132,7 +132,7 @@ public class EnvController : MonoBehaviour
             item.Col = item.Resource.GetComponent<Collider>();
         }
 
-        ResetScene();
+        StartCoroutine(ResetScene());
     }
 
     void FixedUpdate()
@@ -142,7 +142,7 @@ public class EnvController : MonoBehaviour
         {
             m_AdventurerGroup.GroupEpisodeInterrupted();
             m_MonsterGroup.GroupEpisodeInterrupted();
-            ResetScene();
+            StartCoroutine(ResetScene());
         }
 
         // Hurry Up Penalty
@@ -190,8 +190,10 @@ public class EnvController : MonoBehaviour
         return Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0);
     }
 
-    void ResetScene()
+    private IEnumerator ResetScene()
     {
+        yield return new WaitForSeconds(0.5f); // give more time to prepare new scene
+
         // Reset counter
         m_ResetTimer = 0;
 
@@ -323,7 +325,7 @@ public class EnvController : MonoBehaviour
         m_AdventurerGroup.EndGroupEpisode();
         m_MonsterGroup.EndGroupEpisode();
 
-        ResetScene();
+        StartCoroutine(ResetScene());
     }
 
     public void AceGroup(int teamId) 
@@ -345,7 +347,7 @@ public class EnvController : MonoBehaviour
 
         m_AdventurerGroup.EndGroupEpisode();
         m_MonsterGroup.EndGroupEpisode();
-        ResetScene();
+        StartCoroutine(ResetScene());
     }
     public void Eliminate(GameObject character)
     {
