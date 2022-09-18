@@ -140,7 +140,9 @@ MonoBehaviour:
   worth: 0.3
   maxHealth: 5
   isDead: 0
+  axe: {fileID: 7940088926354839916}
   laser: {fileID: 0}
+  sword: {fileID: 0}
   shield: {fileID: 0}
   arrowPrefab: {fileID: 0}
 --- !u!114 &4752494930575889161

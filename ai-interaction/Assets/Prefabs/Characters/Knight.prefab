@@ -38,8 +38,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5928499160917779673}
-  - {fileID: 9212070701335608526}
   - {fileID: 5698187980048395873}
+  - {fileID: 9212070701335608526}
   - {fileID: 4056107772050868336}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -127,7 +127,9 @@ MonoBehaviour:
   worth: 0.3
   maxHealth: 8
   isDead: 0
+  axe: {fileID: 0}
   laser: {fileID: 0}
+  sword: {fileID: 4926893374421546203}
   shield: {fileID: 8402601803863303796}
   arrowPrefab: {fileID: 0}
 --- !u!114 &2885383738147454759
@@ -435,7 +437,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 3c952d6547b91ec4585d632e6089bcca, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3c952d6547b91ec4585d632e6089bcca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -747,7 +749,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 0e1e402868c73ed41abe325ed8fc92cf, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0e1e402868c73ed41abe325ed8fc92cf, type: 3}
       propertyPath: m_LocalPosition.x

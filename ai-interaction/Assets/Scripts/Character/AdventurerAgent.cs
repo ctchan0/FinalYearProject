@@ -36,12 +36,15 @@ public class AdventurerAgent : Agent
 
     private InventoryController m_InventoryController;
 
-    /* Mage skills */
+    [Header("Barbarian's Properties:")]
+    public GameObject axe;
+
     [Header("Mage's Properties:")]
     public GameObject laser;
     float laserLength;
 
     [Header("Knight's Properties:")]
+    public GameObject sword;
     public GameObject shield;
 
     [Header("Rogue's Properties:")]
@@ -49,7 +52,6 @@ public class AdventurerAgent : Agent
     GameObject currentArrow;
     Transform shootPos;
     bool m_Attack = true;
-
     bool m_Use = true;
 
     public override void Initialize()
@@ -183,26 +185,30 @@ public class AdventurerAgent : Agent
         if (actionCommand)
         {
             // perform action with space key
-            switch (m_Class)
+            if (m_Attack)
             {
-                case Class.Barbarian:
-                    break;
+                switch (m_Class)
+                {
+                    case Class.Barbarian:
+                        StartCoroutine(Attack(1f));
+                        break;
 
-                case Class.Mage:
-                    if (m_Attack)
+                    case Class.Mage:
                         StartCoroutine(Attack(2f));
-                    break;
-                case Class.Knight:
-                    break;
+                        break;
 
-                case Class.Rogue:
-                    if (m_Attack)
+                    case Class.Knight:
+                        StartCoroutine(Attack(1f));
+                        break;
+
+                    case Class.Rogue:
                         StartCoroutine(Attack(2f));
-                    break;
+                        break;
 
-                default:
-                    Debug.Log(this.gameObject + " has unknown class ");
-                    break;
+                    default:
+                        Debug.Log(this.gameObject + " has unknown class ");
+                        break;
+                }
             }
         }  
     }
@@ -233,9 +239,16 @@ public class AdventurerAgent : Agent
     private IEnumerator Attack(float coolDownTime)
     {
         m_Attack = false;
-        if (m_Class == Class.Mage)
+        if (m_Class == Class.Barbarian)
         {
-            // Shoot Laser
+            axe.GetComponent<Animator>().SetBool("Attack", true);
+            yield return new WaitForSeconds(0.1f);
+            axe.GetComponent<Animator>().SetBool("Attack", false);
+            yield return new WaitForSeconds(coolDownTime);
+        }
+        else if (m_Class == Class.Mage)
+        {
+            // shoot
             laser.SetActive(true);
             laser.transform.localScale = new Vector3(1f, 1f, laserLength);
             var rayDir = 5.0f * transform.forward;
@@ -256,7 +269,7 @@ public class AdventurerAgent : Agent
                 }
                 else if (hit.collider.gameObject.CompareTag("Monster"))
                 {
-                    // damage
+                    // deal damage
                     var target = hit.collider.gameObject.GetComponent<MonsterAgent>();
                     DealDamage(target, 1);
                 }
@@ -266,12 +279,21 @@ public class AdventurerAgent : Agent
 
             yield return new WaitForSeconds(coolDownTime);
         }
+        else if (m_Class == Class.Knight)
+        {
+            sword.GetComponent<Animator>().SetBool("Attack", true);
+            yield return new WaitForSeconds(0.1f);
+            sword.GetComponent<Animator>().SetBool("Attack", false);
+            yield return new WaitForSeconds(coolDownTime);
+        }
         else if (m_Class == Class.Rogue)
         {
+            // shoot 
             if (currentArrow)
                 currentArrow.GetComponent<Projectile>().shoot = true;
 
             yield return new WaitForSeconds(coolDownTime);
+            // reload the arrow after a certain period of time
             currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
             currentArrow.SetActive(true);
             currentArrow.GetComponent<Projectile>().belonger = this;
@@ -337,6 +359,7 @@ public class AdventurerAgent : Agent
         switch (m_Class)
         {
             case Class.Barbarian:
+                sensor.AddObservation(m_Attack);
                 sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
                 break;
 
