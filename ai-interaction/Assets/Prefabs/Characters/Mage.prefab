@@ -293,7 +293,7 @@ MonoBehaviour:
   m_RotateWithAgent: 1
   m_AgentGameObject: {fileID: 849493518309142333}
   m_DetectableTags:
-  - Breakable
+  - Resource
   - Adventurer
   - Monster
   m_ColliderMask:

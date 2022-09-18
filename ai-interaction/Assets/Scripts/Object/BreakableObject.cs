@@ -84,7 +84,7 @@ public class BreakableObject : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (tag == "Breakable" && other.gameObject.CompareTag(toolName))
+        if (other.gameObject.CompareTag(toolName))
         {
             if (HitImmunity) return;
             other.transform.parent.

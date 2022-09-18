@@ -4,12 +4,12 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Breakable
   - Adventurer
   - Monster
   - Shield
   - Axe
   - Sword
+  - Resource
   layers:
   - Default
   - TransparentFX

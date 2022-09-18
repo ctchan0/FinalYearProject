@@ -1279,11 +1279,29 @@ MonoBehaviour:
       m_Action: Attack
       m_Flags: 0
     m_Flags: 0
-  itemControls:
-    m_Name: Item Controls
+  useItem_1:
+    m_Name: Use Item_1
     m_Type: 0
     m_ExpectedControlType: 
-    m_Id: 909894ca-4f43-4bbf-879e-fab1d16a3668
+    m_Id: 357a75d3-91c1-4f1f-8747-03270c5d51c1
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  useItem_2:
+    m_Name: Use Item_2
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: e3ed066c-c0fa-40bc-a277-5a5a070f4150
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  useItem_3:
+    m_Name: Use Item_3
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: fd7106be-481d-4a4c-8b5f-5be7f3be7c2f
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -1308,7 +1326,7 @@ MonoBehaviour:
   m_DetectableTags:
   - Adventurer
   - Monster
-  - Breakable
+  - Resource
   m_ColliderMask:
     serializedVersion: 2
     m_Bits: 51

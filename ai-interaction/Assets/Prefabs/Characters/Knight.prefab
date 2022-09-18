@@ -123,7 +123,7 @@ MonoBehaviour:
   m_Class: 2
   canControl: 1
   turnSpeed: 300
-  moveSpeed: 2
+  moveSpeed: 2.5
   worth: 0.3
   maxHealth: 8
   isDead: 0
@@ -389,7 +389,7 @@ MonoBehaviour:
   m_RotateWithAgent: 1
   m_AgentGameObject: {fileID: 6530357835819312337}
   m_DetectableTags:
-  - Breakable
+  - Resource
   - Adventurer
   - Monster
   m_ColliderMask:

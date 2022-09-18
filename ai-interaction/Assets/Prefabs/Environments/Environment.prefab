@@ -643,7 +643,7 @@ MonoBehaviour:
     item: {fileID: 11400000, guid: 97da8d9fcc3887345afb505df90c2164, type: 2}
     itemState: []
   ItemInitiatorList:
-  - quantity: 1
+  - quantity: 3
     item: {fileID: 11400000, guid: bc2052556f800e44b857e2bb547905dc, type: 2}
     itemState: []
   - quantity: 1
@@ -907,6 +907,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3177449171097193627, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
+      propertyPath: m_DetectableTags.Array.data[2]
+      value: Resource
+      objectReference: {fileID: 0}
     - target: {fileID: 3179223771065162811, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_Name
       value: TurtleShell (3)
@@ -987,6 +991,10 @@ PrefabInstance:
     - target: {fileID: 3173348422176050923, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3177449171097193627, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
+      propertyPath: m_DetectableTags.Array.data[2]
+      value: Resource
       objectReference: {fileID: 0}
     - target: {fileID: 3179223771065162811, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_Name
@@ -1282,6 +1290,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3177449171097193627, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
+      propertyPath: m_DetectableTags.Array.data[2]
+      value: Resource
+      objectReference: {fileID: 0}
     - target: {fileID: 3179223771065162811, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_Name
       value: TurtleShell (1)
@@ -1443,30 +1455,6 @@ PrefabInstance:
     - target: {fileID: 3173348422176050923, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_1.m_Id
-      value: 357a75d3-91c1-4f1f-8747-03270c5d51c1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_2.m_Id
-      value: e3ed066c-c0fa-40bc-a277-5a5a070f4150
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_3.m_Id
-      value: fd7106be-481d-4a4c-8b5f-5be7f3be7c2f
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_1.m_Name
-      value: Use Item_1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_2.m_Name
-      value: Use Item_2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3177449171097193617, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
-      propertyPath: useItem_3.m_Name
-      value: Use Item_3
       objectReference: {fileID: 0}
     - target: {fileID: 3179223771065162811, guid: cb5d40e5beb57be4a9a50a88fa94f8ea, type: 3}
       propertyPath: m_Name
