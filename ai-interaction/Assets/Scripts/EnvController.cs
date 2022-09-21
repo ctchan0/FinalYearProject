@@ -317,8 +317,8 @@ public class EnvController : MonoBehaviour
 
     public void GatherAllResources() // adventurers win
     {
-        m_AdventurerGroup.AddGroupReward(1f);
-        m_MonsterGroup.AddGroupReward(-1f);
+        m_AdventurerGroup.AddGroupReward(0.5f);
+        m_MonsterGroup.AddGroupReward(-0.5f);
         StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.goalScoredMaterial, 0.5f));
 
         print("Gather all resources");
@@ -336,18 +336,18 @@ public class EnvController : MonoBehaviour
             m_AdventurerGroup.AddGroupReward(-1f);
             StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.failMaterial, 0.5f));
             print("All adventurers are dead");
+
+            m_AdventurerGroup.EndGroupEpisode();
+            m_MonsterGroup.EndGroupEpisode();
+            StartCoroutine(ResetScene());
         }
         else if (teamId == 1) // monster's team
         {
-            m_MonsterGroup.AddGroupReward(-1f);
-            m_AdventurerGroup.AddGroupReward(1f);
+            m_MonsterGroup.AddGroupReward(-0.5f);
+            m_AdventurerGroup.AddGroupReward(0.5f);
             StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.goalScoredMaterial, 0.5f));
-            print("All Monsters are dead");
+            // print("All Monsters are dead");
         }
-
-        m_AdventurerGroup.EndGroupEpisode();
-        m_MonsterGroup.EndGroupEpisode();
-        StartCoroutine(ResetScene());
     }
     public void Eliminate(GameObject character)
     {
@@ -356,7 +356,7 @@ public class EnvController : MonoBehaviour
             m_NumberOfRemainingAdventurers--;
             character.SetActive(false);
             
-            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Barbarian || adventurer.m_Class == Class.Rogue)
+            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Rogue || adventurer.m_Class == Class.Barbarian)
             {
                 AceGroup(0);
             }
@@ -366,7 +366,7 @@ public class EnvController : MonoBehaviour
             m_NumberOfRemainingMonsters--;
             character.SetActive(false);
             
-            if (m_NumberOfRemainingAdventurers == 0)
+            if (m_NumberOfRemainingMonsters == 0)
             {
                 AceGroup(1);
             }

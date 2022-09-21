@@ -9,7 +9,10 @@ TagManager:
   - Shield
   - Axe
   - Sword
-  - Resource
+  - Item
+  - Breakable
+  - Unbreakable
+  - Projectile
   layers:
   - Default
   - TransparentFX

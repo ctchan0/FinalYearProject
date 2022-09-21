@@ -86,7 +86,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 9
+    VectorObservationSize: 10
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
@@ -387,20 +387,24 @@ MonoBehaviour:
   m_CellScale: {x: 1, y: 0.01, z: 1}
   m_GridSize: {x: 20, y: 1, z: 20}
   m_RotateWithAgent: 1
-  m_AgentGameObject: {fileID: 6530357835819312337}
+  m_AgentGameObject: {fileID: 0}
   m_DetectableTags:
-  - Resource
   - Adventurer
   - Monster
+  - Breakable
+  - Unbreakable
+  - Item
   m_ColliderMask:
     serializedVersion: 2
     m_Bits: 51
   m_MaxColliderBufferSize: 500
   m_InitialColliderBufferSize: 4
   m_DebugColors:
-  - {r: 0.25799915, g: 0.5, b: 0.15408802, a: 0}
-  - {r: 0.062003035, g: 0.44873127, b: 0.5188679, a: 0}
-  - {r: 0.4811321, g: 0.07564967, b: 0.17772329, a: 0}
+  - {r: 0.0627451, g: 0.44705886, b: 0.5176471, a: 0}
+  - {r: 0.48235297, g: 0.07450981, b: 0.1764706, a: 0}
+  - {r: 0.29656518, g: 0.48235294, b: 0.07450979, a: 0}
+  - {r: 0.3865175, g: 0.19479053, b: 0.46226418, a: 0}
+  - {r: 0.6320754, g: 0.400772, b: 0.15901265, a: 0}
   m_GizmoYOffset: 0
   m_ShowGizmos: 0
   m_CompressionType: 1

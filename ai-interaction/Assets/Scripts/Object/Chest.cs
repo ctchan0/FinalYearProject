@@ -26,7 +26,7 @@ public class Chest : MonoBehaviour
         if (other.gameObject.CompareTag("Adventurer"))
         {
             var adventurer = other.gameObject.GetComponent<AdventurerAgent>();
-            if (adventurer.m_Class == Class.Rogue && this.closed)
+            if (this.closed)
             {
                 animator.SetBool("Unlock", true);
                 closed = false;

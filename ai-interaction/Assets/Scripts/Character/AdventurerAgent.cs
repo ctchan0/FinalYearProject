@@ -50,7 +50,7 @@ public class AdventurerAgent : Agent
     [Header("Rogue")]
     public GameObject arrowPrefab;
     GameObject currentArrow;
-    Transform shootPos;
+    
     bool m_Attack = true;
 
     int ItemId;
@@ -192,31 +192,10 @@ public class AdventurerAgent : Agent
         bool actionCommand = discreteActions[0] > 0;
         if (actionCommand)
         {
-            // perform action with space key
+            // attack with space key
             if (m_Attack)
             {
-                switch (m_Class)
-                {
-                    case Class.Barbarian:
-                        StartCoroutine(Attack(1f));
-                        break;
-
-                    case Class.Mage:
-                        StartCoroutine(Attack(2f));
-                        break;
-
-                    case Class.Knight:
-                        StartCoroutine(Attack(1f));
-                        break;
-
-                    case Class.Rogue:
-                        StartCoroutine(Attack(2f));
-                        break;
-
-                    default:
-                        Debug.Log(this.gameObject + " has unknown class ");
-                        break;
-                }
+                StartCoroutine(Attack(1f));
             }
         }  
     }
@@ -232,7 +211,6 @@ public class AdventurerAgent : Agent
         if (m_Use && m_InventoryController.CanUseItem(itemIndex))
         {
             // AddReward(0.2f);
-            // current using item
             ItemId = m_InventoryController.GetItemAt(itemIndex).item.ID;
             StartCoroutine(UseItem(itemIndex, 1f)); 
         }
@@ -267,21 +245,27 @@ public class AdventurerAgent : Agent
             RaycastHit hit;
             if (Physics.SphereCast(transform.position + new Vector3(0, 0.5f, 0), 1f, rayDir, out hit, 5f))
             {
-                if (hit.collider.gameObject.CompareTag("Adventurer"))
+                var hitObject = hit.collider.gameObject;
+                if (hitObject.CompareTag("Adventurer"))
                 {
                     // heal
-                    var target = hit.collider.gameObject.GetComponent<AdventurerAgent>();
+                    var target = hitObject.GetComponent<AdventurerAgent>();
                     target.GetCure(2);
                     if (target.maxHealth >= 2)
                         AddReward(2f / target.maxHealth); // assure reward within range <= 1f
                     else 
                         AddReward(1f);
                 }
-                else if (hit.collider.gameObject.CompareTag("Monster"))
+                else if (hitObject.CompareTag("Monster"))
                 {
                     // deal damage
-                    var target = hit.collider.gameObject.GetComponent<MonsterAgent>();
+                    var target = hitObject.GetComponent<MonsterAgent>();
                     DealDamage(target, 1);
+                }
+                else if (hitObject.CompareTag("Breakable"))
+                {
+                    var target = hitObject.GetComponent<BreakableObject>();
+                    target.HandleHit(this);
                 }
             }
             yield return new WaitForSeconds(0.1f);
@@ -300,14 +284,20 @@ public class AdventurerAgent : Agent
         {
             // shoot 
             if (currentArrow)
+            {
                 currentArrow.GetComponent<Projectile>().shoot = true;
+                currentArrow.GetComponent<Collider>().enabled = true;
+            }
 
             yield return new WaitForSeconds(coolDownTime);
             // reload the arrow after a certain period of time
-            currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
-            currentArrow.SetActive(true);
-            currentArrow.GetComponent<Projectile>().belonger = this;
-            currentArrow.transform.SetParent(this.transform);
+            if (!currentArrow)
+            {
+                currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
+                currentArrow.SetActive(true);
+                currentArrow.GetComponent<Projectile>().belonger = this;
+                currentArrow.transform.SetParent(this.transform);
+            }
         }
         else
         {
@@ -374,35 +364,34 @@ public class AdventurerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(m_Attack);
+        sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+        sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
+        sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
         sensor.AddObservation(m_Use);
         sensor.AddObservation(ItemId);
         switch (m_Class)
         {
             case Class.Barbarian:
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
+                sensor.AddObservation(axe.transform.position); 
                 sensor.AddObservation(this.currentHealth);
                 break;
 
             case Class.Mage:
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
                 foreach (var item in m_EnvController.AdventurersList)
                 {
-                    sensor.AddObservation(item.Adventurer.currentHealth); // currently 4 members
+                    sensor.AddObservation(item.Adventurer.maxHealth - item.Adventurer.currentHealth); // currently 4 members
                 }
                 break;
 
             case Class.Knight:
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
-                sensor.AddObservation(shield.transform.position); // count as 3 observations
-                sensor.AddObservation(this.currentHealth);
+                sensor.AddObservation(shield.transform.position.x); 
+                sensor.AddObservation(shield.transform.position.z);
+                sensor.AddObservation(sword.transform.position.x);
+                sensor.AddObservation(sword.transform.position.z);
                 break;
 
             case Class.Rogue:
-                sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
                 sensor.AddObservation(this.currentHealth);
-                
                 break;
 
             default:

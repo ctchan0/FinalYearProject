@@ -16,8 +16,6 @@ public class BreakableObject : MonoBehaviour
     [SerializeField] Mesh[] afterHit;
     [SerializeField] GameObject resource;
 
-    [SerializeField] string toolName;
-
     void Awake()
     {
         m_EnvController = GetComponentInParent<EnvController>();
@@ -53,7 +51,7 @@ public class BreakableObject : MonoBehaviour
         }
     }
 
-    private void HandleHit(AdventurerAgent adventurer) 
+    public void HandleHit(AdventurerAgent adventurer) 
     {
         timesHit++;
         int maxHits = afterHit.Length + 1;
@@ -77,21 +75,18 @@ public class BreakableObject : MonoBehaviour
         else
         {
             m_EnvController.AddGroupReward(1, -0.1f);
-            adventurer.AddReward(0.2f);
+            adventurer.AddReward(0.3f);
             ShowNextHit();
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag(toolName))
-        {
-            if (HitImmunity) return;
-            other.transform.parent.
-                TryGetComponent<AdventurerAgent>(out AdventurerAgent adventurer);
-            if (!adventurer) return;
-            HandleHit(adventurer);
-        }
+        if (HitImmunity) return;
+        other.transform.parent.
+            TryGetComponent<AdventurerAgent>(out AdventurerAgent adventurer);
+        if (!adventurer) return;
+        HandleHit(adventurer);
     }
 }
 

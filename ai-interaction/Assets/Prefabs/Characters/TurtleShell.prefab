@@ -1326,13 +1326,17 @@ MonoBehaviour:
   m_DetectableTags:
   - Adventurer
   - Monster
-  - Resource
+  - Breakable
+  - Unbreakable
+  - Item
   m_ColliderMask:
     serializedVersion: 2
     m_Bits: 51
   m_MaxColliderBufferSize: 500
   m_InitialColliderBufferSize: 4
   m_DebugColors:
+  - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
+  - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}

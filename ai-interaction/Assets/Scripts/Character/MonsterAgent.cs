@@ -144,7 +144,7 @@ public class MonsterAgent : Agent
 
     private void OnTriggerEnter(Collider other) 
     {
-        if (other.gameObject.CompareTag("Sword"))
+        if (other.gameObject.CompareTag("Sword") || other.gameObject.CompareTag("Axe"))
         {
             var adventurerAgent = other.gameObject.transform.parent.GetComponent<AdventurerAgent>();
             adventurerAgent.DealDamage(this, 1);

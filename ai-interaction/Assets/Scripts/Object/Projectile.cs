@@ -11,6 +11,7 @@ public class Projectile : MonoBehaviour
     void Awake()
     {
         shoot = false;
+        GetComponent<Collider>().enabled = false;
     }
 
     // Update is called once per frame
