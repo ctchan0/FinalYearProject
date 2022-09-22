@@ -14,7 +14,7 @@ public class Item : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     [SerializeField] private float pickDuration = 0.3f;
-    [SerializeField] private float throwDuration = 0.7f;
+    // [SerializeField] private float dropDuration = 0.7f;
 
     public bool canPick = true; // prevent pick up trigger
 
@@ -34,12 +34,6 @@ public class Item : MonoBehaviour
         StartCoroutine(AnimateItemScale(transform.localScale, Vector3.zero, pickDuration));
     }
 
-    public void AnimateItemThrow()
-    {
-        StartCoroutine(DisablePickUp(1f));
-        StartCoroutine(AnimateItemScale(Vector3.zero, transform.localScale, throwDuration));
-    }
-
     private IEnumerator AnimateItemScale(Vector3 startScale, Vector3 endScale, float duration)
     {
         float currentTime = 0;
@@ -53,12 +47,28 @@ public class Item : MonoBehaviour
             Destroy(gameObject);
     }
 
-    private IEnumerator DisablePickUp(float waitTime) 
+    private void OnTriggerEnter(Collider other) 
     {
-        canPick = false;
-        yield return new WaitForSeconds(waitTime);
-        canPick = true;
+        if (other.gameObject.CompareTag("Projectile")) return;
+        
+        if (other.TryGetComponent<AdventurerAgent>(out AdventurerAgent adventurer))
+        {
+            if (canPick && adventurer.isDead == false)
+            {
+                adventurer.CollectResources();
+                int reminder = adventurer.GetComponent<InventoryController>().AddItem(this.InventoryItem, this.Quantity);
+                if (reminder > 0)
+                {
+                    this.Quantity = reminder;
+                }
+                else
+                {
+                    PickUp();
+                }
+            }
+        }
     }
+
 
     public void ClearItem()
     {

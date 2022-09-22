@@ -85,7 +85,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 10
+    VectorObservationSize: 8
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 3
@@ -96,7 +96,7 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 3
-  m_BehaviorType: 1
+  m_BehaviorType: 0
   m_BehaviorName: Barbarian
   TeamId: 0
   m_UseChildSensors: 1
@@ -299,7 +299,7 @@ MonoBehaviour:
   - Item
   m_ColliderMask:
     serializedVersion: 2
-    m_Bits: 51
+    m_Bits: 1
   m_MaxColliderBufferSize: 500
   m_InitialColliderBufferSize: 4
   m_DebugColors:

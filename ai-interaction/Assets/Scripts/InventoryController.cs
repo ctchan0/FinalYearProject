@@ -300,25 +300,6 @@ public class InventoryController : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
-        if (other.TryGetComponent<Item>(out Item item))
-        {
-            if (item.canPick && GetComponent<AdventurerAgent>().isDead == false)
-            {
-                this.GetComponent<AdventurerAgent>().CollectResources();
-                int reminder = AddItem(item.InventoryItem, item.Quantity);
-                if (reminder > 0)
-                {
-                    item.Quantity = reminder;
-                }
-                else
-                {
-                    item.PickUp();
-                }
-            }
-        }
-    }
-
 }
 [System.Serializable]
 public struct InventoryItem // Struct can not be set to null, but can set to be empty by method

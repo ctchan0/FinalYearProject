@@ -356,7 +356,7 @@ public class EnvController : MonoBehaviour
             m_NumberOfRemainingAdventurers--;
             character.SetActive(false);
             
-            if (m_NumberOfRemainingAdventurers == 0 || adventurer.m_Class == Class.Rogue || adventurer.m_Class == Class.Barbarian)
+            if (m_NumberOfRemainingAdventurers <= 1)
             {
                 AceGroup(0);
             }

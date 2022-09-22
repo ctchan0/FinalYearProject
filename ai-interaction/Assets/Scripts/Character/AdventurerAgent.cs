@@ -226,6 +226,7 @@ public class AdventurerAgent : Agent
 
     private IEnumerator Attack(float coolDownTime)
     {
+        AddReward(0.2f/ m_EnvController.MaxEnvironmentSteps);
         m_Attack = false;
         if (m_Class == Class.Barbarian)
         {
@@ -364,34 +365,35 @@ public class AdventurerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(m_Attack);
+
+        sensor.AddObservation(this.currentHealth);
+
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
+
         sensor.AddObservation(m_Use);
         sensor.AddObservation(ItemId);
+
         switch (m_Class)
         {
             case Class.Barbarian:
-                sensor.AddObservation(axe.transform.position); 
-                sensor.AddObservation(this.currentHealth);
+                sensor.AddObservation(axe.transform.localRotation.z); 
                 break;
 
             case Class.Mage:
                 foreach (var item in m_EnvController.AdventurersList)
                 {
-                    sensor.AddObservation(item.Adventurer.maxHealth - item.Adventurer.currentHealth); // currently 4 members
+                    if (item.Adventurer != this)
+                        sensor.AddObservation(item.Adventurer.maxHealth - item.Adventurer.currentHealth); // possible heal amount
                 }
                 break;
 
             case Class.Knight:
-                sensor.AddObservation(shield.transform.position.x); 
-                sensor.AddObservation(shield.transform.position.z);
-                sensor.AddObservation(sword.transform.position.x);
-                sensor.AddObservation(sword.transform.position.z);
+                sensor.AddObservation(sword.transform.localPosition.z); 
                 break;
 
             case Class.Rogue:
-                sensor.AddObservation(this.currentHealth);
                 break;
 
             default:
