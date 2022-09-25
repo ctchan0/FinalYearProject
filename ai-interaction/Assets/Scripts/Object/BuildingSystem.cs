@@ -30,6 +30,7 @@ public class BuildingSystem : MonoBehaviour
         cursorController = FindObjectOfType<CursorController>();
 
         gridGraph = AstarPath.active.data.gridGraph;
+        
         mainTilemap.origin = Vector3Int.zero;
         mainTilemap.size = new Vector3Int(gridGraph.width, gridGraph.depth, 1);
         mainTilemap.ResizeBounds();
