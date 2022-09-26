@@ -311,7 +311,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1736095921}
   m_Layer: 0
-  m_Name: BoardManager
+  m_Name: BlockManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -403,6 +403,11 @@ MonoBehaviour:
   spawnPosition: {x: 0, y: 0, z: 8}
   boardWidth: 10
   boardDepth: 20
+  blockManager: {fileID: 0}
+  monsterBlocks:
+  - {fileID: 2006537468402525812, guid: db9c3ba3b6e386743b9ace52853a1ee5, type: 3}
+  - {fileID: 580585264208979498, guid: bfb37139fc4e0854890dfc8fc1d005c4, type: 3}
+  - {fileID: 631401114387085060, guid: 2d04b45e9214730469a6ca9c35605048, type: 3}
   gameOver: 0
 --- !u!4 &1344841283103996896
 Transform:

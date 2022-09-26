@@ -20,7 +20,7 @@ public class Piece : MonoBehaviour // data of the current active piece
     public InputAction rotate;
     public int rotationIndex { get; private set; }
 
-    private GameObject boardManager;
+    private GameObject blockManager;
 
 
     private void OnEnable()
@@ -39,7 +39,7 @@ public class Piece : MonoBehaviour // data of the current active piece
 
     private void Start()
     {
-        boardManager = GameObject.Find("BoardManager");
+        blockManager = GameObject.Find("BlockManager");
         StartCoroutine(Push());
     }
 
@@ -71,14 +71,14 @@ public class Piece : MonoBehaviour // data of the current active piece
 
         Destroy(ghost);
         
-        if (!boardManager)
+        if (!blockManager)
         {
             print("Missing parent");
             return;
         }
         for (int i = 0 ; i < trapBlocks.Length ; i++)
         {
-            trapBlocks[i].transform.SetParent(boardManager.transform);
+            trapBlocks[i].transform.SetParent(blockManager.transform);
         }
         Destroy(this.gameObject);
     }
@@ -109,7 +109,7 @@ public class Piece : MonoBehaviour // data of the current active piece
         }
     }
 
-    private void UpdateGhost() // for every manual move
+    public void UpdateGhost() // for every manual move
     {
         Vector3Int pos = FindBottom();
         ghost.transform.position = pos;
@@ -151,13 +151,18 @@ public class Piece : MonoBehaviour // data of the current active piece
             return;
         }
 
-        for (int i = 0; i < route.Length; i++)
+        for (int i = 0; i < route.Length; i+=2)
         {
-            Vector3Int pos = route[i] + startPos; // route[i]: offset from start position
             int n = Random.Range(0, trapBlockPrefab.Length);
-            var block = Instantiate(trapBlockPrefab[n], (Vector3)pos, Quaternion.identity);
-            trapBlocks[i] = block;
-            block.transform.SetParent(this.transform);
+            Vector3Int pos_1 = route[i] + startPos; // route[i]: offset from start position
+            var block_1 = Instantiate(trapBlockPrefab[n], (Vector3)pos_1, Quaternion.identity);
+            trapBlocks[i] = block_1;
+            block_1.transform.SetParent(this.transform);
+
+            Vector3Int pos_2 = route[i+1] + startPos; 
+            var block_2 = Instantiate(trapBlockPrefab[n], (Vector3)pos_2, Quaternion.identity);
+            trapBlocks[i+1] = block_2;
+            block_2.transform.SetParent(this.transform);
         }
 
         this.rotationIndex = 0;

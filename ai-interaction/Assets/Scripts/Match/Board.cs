@@ -20,16 +20,16 @@ public class Board : MonoBehaviour
     public int boardDepth = 20;
 
     public Block[,] blocks;
+    public GameObject blockManager;
+    public Block[] monsterBlocks;
 
     public bool gameOver = false;
-
-    private GameObject boardManager;
 
     private void Awake()
     {
         this.gridLayout = GetComponent<Grid>();
         this.tilemap = GetComponentInChildren<Tilemap>();
-        boardManager = GameObject.Find("BoardManager");
+        blockManager = GameObject.Find("BlockManager");
 
         blocks = new Block[boardDepth, boardWidth];
 
@@ -46,6 +46,45 @@ public class Board : MonoBehaviour
     {
         this.spawnPosition += Vector3Int.FloorToInt(this.transform.position);
         SpawnTrap();
+        StartCoroutine(SpawnMonsterBlock());
+    }
+
+    public IEnumerator SpawnMonsterBlock()
+    {
+        while (gameOver == false)
+        {
+            AllBlocksMoveUp();
+            // spawn monster
+            for (int j = 0; j < boardWidth; j++)
+            {
+                int n = UnityEngine.Random.Range(-1, monsterBlocks.Length);
+                if (n == -1) continue;
+                Block monsterBlock = Instantiate(monsterBlocks[n], 
+                                                blockManager.transform.position + new Vector3(j, 0, 0), 
+                                                monsterBlocks[n].transform.rotation);
+                blocks[0, j] = monsterBlock;
+                monsterBlock.index = j;
+
+                SetTile(blocks[0, j].transform.position);
+            }
+
+            activePiece.UpdateGhost();
+            yield return new WaitForSeconds(30f);
+        }
+    }
+
+    private void AllBlocksMoveUp()
+    {
+        for (int i = boardDepth-2; i >= 0; i--) // for each row except the top
+        {
+            for (int j = 0; j < boardWidth; j++) // for each column
+            {
+                if (blocks[i, j] == null) continue;
+
+                if (blocks[i+1, j] == null)
+                    TranslateBlock(i, j, i+1, j);
+            }
+        }
     }
 
     public void SpawnTrap()
@@ -72,12 +111,11 @@ public class Board : MonoBehaviour
         gameOver = true;
     }
 
-    public void Occupy(Piece piece, int i)
+    public void Occupy(Piece piece, int i) 
     {
         if (piece.trapBlocks[i].TryGetComponent<Block>(out Block block))
         {
-            Vector3Int cellPos = gridLayout.WorldToCell(Vector3Int.FloorToInt(piece.transform.position) + piece.route[i]); 
-            this.tilemap.SetTile(cellPos, null);  // tile is removed when occupied
+            SetTile(piece.transform.position + piece.route[i]);  
 
             Vector3Int blockPos = Vector3Int.FloorToInt(piece.transform.localPosition) + piece.route[i];
             blocks[blockPos.z, blockPos.x] = block;
@@ -100,7 +138,7 @@ public class Board : MonoBehaviour
                 int x = blockIndex % boardWidth;
                 int y = blockIndex / boardWidth;
                 // Debug.Log(blockIndex);
-                Clear(blocks[y, x].transform.position);
+                ClearTile(blocks[y, x].transform.position);
                 Destroy(blocks[y, x].gameObject);
                 blocks[y, x] = null;
             }
@@ -126,26 +164,33 @@ public class Board : MonoBehaviour
     {
         while (blocks[row, col] != null) // for each block
         {
-            var block = blocks[row,col];
-            Clear(blocks[row, col].transform.position); // clear the orginal position
-            blocks[row, col] = null;
-            int x = col;
+            int x = col;   // calculate new row
             int y = row;
             while (y - 1 >= 0 && blocks[y-1, col] == null)
             {
                 y--;
             }
             
-            block.transform.position = boardManager.transform.position + new Vector3(x, 0, y); // need to change to local
-            blocks[y, x] = block;
-            block.index = y * boardWidth + x;
-            drop.Add(block.index);
-
-            Vector3Int cellPos = gridLayout.WorldToCell(Vector3Int.FloorToInt(block.transform.position)); // occupy
-            this.tilemap.SetTile(cellPos, null);
+            int index = TranslateBlock(row, col, y, x);
+            drop.Add(index);
 
             row++; // check the next upper block
         }
+    }
+
+    public int TranslateBlock(int startRow, int startCol, int endRow, int endCol)
+    {
+        var block = blocks[startRow, startCol];
+
+        ClearTile(blocks[startRow, startCol].transform.position); // clear original position
+        blocks[startRow, startCol] = null;
+
+        block.transform.Translate(new Vector3(endCol-startCol, 0, endRow-startRow));
+        blocks[endRow, endCol] = block;
+        SetTile(blocks[endRow, endCol].transform.position);
+
+        block.index = endRow * boardWidth + endCol;
+        return block.index;
     }
 
     public List<int> BFS(int row, int col, int colour)
@@ -211,10 +256,16 @@ public class Board : MonoBehaviour
 
 
 
-    public void Clear(Vector3 pos)
+    public void ClearTile(Vector3 pos)
     {
         Vector3Int cellPos = gridLayout.WorldToCell(pos);
         this.tilemap.SetTile(cellPos, gridTile); // tile is displayed if not occupied
+    }
+
+    public void SetTile(Vector3 pos)
+    {
+        Vector3Int cellPos = gridLayout.WorldToCell(pos); 
+        this.tilemap.SetTile(cellPos, null); // tile is removed if occupied
     }
 
     public bool IsValidPosition(Piece piece, Vector3 position, Vector3Int[] route)
