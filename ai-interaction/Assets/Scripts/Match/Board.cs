@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Random = UnityEngine.Random;
+
 
 public class Board : MonoBehaviour
 {
@@ -10,30 +12,35 @@ public class Board : MonoBehaviour
     public Tilemap tilemap { get; private set; }
     [SerializeField] private TileBase gridTile;
 
-    public Piece piecePrefab; // contain a trap
-    public Piece activePiece { get; private set; }
+    public PieceAgent activePiece;
 
     public Trap[] traps;
-    public Vector3Int spawnPosition;
 
     public int boardWidth = 10;
     public int boardDepth = 20;
 
-    public Block[,] blocks;
     public GameObject blockManager;
+    public Block[] blocks;
     public Block[] monsterBlocks;
 
     public bool gameOver = false;
+
+    public Block[] GetBlocksList() // shadow copy
+    {
+        var blocksCopy = new Block[boardDepth * boardWidth]; 
+        for (int i = 0; i < blocks.Length; i++)
+        {
+            blocksCopy[i] = blocks[i];
+        }
+        return blocksCopy;
+    }
 
     private void Awake()
     {
         this.gridLayout = GetComponent<Grid>();
         this.tilemap = GetComponentInChildren<Tilemap>();
-        blockManager = GameObject.Find("BlockManager");
 
-        blocks = new Block[boardDepth, boardWidth];
-
-        this.activePiece = GetComponent<Piece>();
+        blocks = new Block[boardDepth * boardWidth];
 
         // construct shape of traps
         for (int i = 0; i < this.traps.Length; i++)
@@ -44,33 +51,42 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        this.spawnPosition += Vector3Int.FloorToInt(this.transform.position);
-        SpawnTrap();
         StartCoroutine(SpawnMonsterBlock());
     }
 
     public IEnumerator SpawnMonsterBlock()
     {
-        while (gameOver == false)
+        while (true)
         {
+            while(activePiece.CloseToGhost())
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
             AllBlocksMoveUp();
             // spawn monster
             for (int j = 0; j < boardWidth; j++)
             {
-                int n = UnityEngine.Random.Range(-1, monsterBlocks.Length);
+                int n = Random.Range(-1, monsterBlocks.Length);
                 if (n == -1) continue;
                 Block monsterBlock = Instantiate(monsterBlocks[n], 
                                                 blockManager.transform.position + new Vector3(j, 0, 0), 
                                                 monsterBlocks[n].transform.rotation);
-                blocks[0, j] = monsterBlock;
-                monsterBlock.index = j;
-
-                SetTile(blocks[0, j].transform.position);
+                PlaceBlock(monsterBlock, 0, j);
             }
 
-            activePiece.UpdateGhost();
+            activePiece.ghost.UpdatePos();
             yield return new WaitForSeconds(30f);
         }
+    }
+
+    public void PlaceBlock(Block block, int row, int col)
+    {
+        block.index = GetBlockIndexAt(row, col);
+        blocks[block.index] = block;
+        block.transform.SetParent(blockManager.transform);
+
+        SetTile(blocks[block.index].transform.position);
     }
 
     private void AllBlocksMoveUp()
@@ -79,126 +95,170 @@ public class Board : MonoBehaviour
         {
             for (int j = 0; j < boardWidth; j++) // for each column
             {
-                if (blocks[i, j] == null) continue;
+                int index = i * boardWidth + j;
+                if (blocks[index] == null) continue;
 
-                if (blocks[i+1, j] == null)
+                if (blocks[index + boardWidth] == null)
                     TranslateBlock(i, j, i+1, j);
             }
         }
     }
 
-    public void SpawnTrap()
+    public Trap GetRandomTrap()
     {
-        if (activePiece) return;
-
-        int random = UnityEngine.Random.Range(0, this.traps.Length);
-        Trap trap = this.traps[random];
-
-        this.activePiece = Instantiate(piecePrefab, this.spawnPosition, Quaternion.identity); // assign new piece
-        this.activePiece.Initialize(this, this.spawnPosition, trap);
-    }
-
-    public void ContinueToNextPiece()
-    {
-        activePiece = null;
-        if (!gameOver)
-            SpawnTrap();
+        int random = Random.Range(0, this.traps.Length);
+        return this.traps[random];
     }
 
     public void GameOver()
     {
         print("Game Over!");
         gameOver = true;
+
+        Reset();
     }
 
-    public void Occupy(Piece piece, int i) 
+    public void Reset()
     {
-        if (piece.trapBlocks[i].TryGetComponent<Block>(out Block block))
+        for (int i = blocks.Length - 1; i >= 0; i--)
         {
-            SetTile(piece.transform.position + piece.route[i]);  
-
-            Vector3Int blockPos = Vector3Int.FloorToInt(piece.transform.localPosition) + piece.route[i];
-            blocks[blockPos.z, blockPos.x] = block;
-            block.index = blockPos.z * boardWidth + blockPos.x;
+            if (blocks[i] == null) continue;
+            var block = blocks[i];
+            ClearTile(block.transform.position);
+            Destroy(block.gameObject);
+            blocks[i] = null;
         }
+        for (int i = 0; i < activePiece.trapBlocks.Length; i++)
+        {
+            if (activePiece.trapBlocks[i] == null) continue;
+            var block = activePiece.trapBlocks[i];
+            Destroy(block.gameObject);
+            activePiece.trapBlocks[i] = null;
+        }
+        gameOver = false;
+
+        activePiece.EndEpisode();
     }
 
-    public void Match(int index)
+    public void Occupy(PieceAgent piece) 
     {
-        int col = index % boardWidth;
-        int row = index / boardWidth;
-        if (blocks[row, col] == null) return;
-        int colour = blocks[row, col].colour;
-        List<int> match = BFS(row, col, colour);
-        Debug.Log("row:" + row + ", col:" + col + ", match:" + match.Count);
-        if (match.Count >= 5)
+        if (piece.route.Length == 0)
         {
-            foreach (var blockIndex in match)
+            print("An empty piece cannot occupy.");
+            return;
+        }
+        for (int i = 0 ; i < piece.route.Length; i++)
+        {
+            if (piece.trapBlocks[i])
             {
-                int x = blockIndex % boardWidth;
-                int y = blockIndex / boardWidth;
-                // Debug.Log(blockIndex);
-                ClearTile(blocks[y, x].transform.position);
-                Destroy(blocks[y, x].gameObject);
-                blocks[y, x] = null;
-            }
-
-            var dropBlocks =new List<int>();
-            foreach (var blockIndex in match)
-            {
-                int x = blockIndex % boardWidth;
-                int y = blockIndex / boardWidth;
-                if (!match.Contains(blockIndex + boardWidth)) // if the upper block is not in the match
-                    Drop(y+1, x, ref dropBlocks);
-            }
-
-            if (dropBlocks.Count != 0)
-            {
-                foreach (var blockIndex in dropBlocks)
-                    Match(blockIndex);
+                Vector3Int blockPos = Vector3Int.FloorToInt(piece.transform.localPosition) + piece.route[i];
+                PlaceBlock(piece.trapBlocks[i], blockPos.z, blockPos.x);
             }
         }
     }
 
-    public void Drop(int row, int col, ref List<int> drop)
+    public void Match(Queue<int> matchSeq)
     {
-        while (blocks[row, col] != null) // for each block
+        if (matchSeq.Count == 0) 
         {
-            int x = col;   // calculate new row
-            int y = row;
-            while (y - 1 >= 0 && blocks[y-1, col] == null)
+            activePiece.SetNewTrap();
+            return;
+        }
+
+        var nextMatchSeq = new Queue<int>();
+        var matchedBlocks = new List<int>();
+        while (matchSeq.Count > 0)
+        {
+            int index = matchSeq.Dequeue();
+            int col = index % boardWidth;
+            int row = index / boardWidth;
+            if (blocks[index] == null) continue;
+
+            int colour = blocks[index].colour;
+            List<int> match = BFS(blocks, row, col, colour); // a list of blocks that match
+
+            if (match.Count >= 5)
+            {
+                foreach (var blockIndex in match)
+                {
+                    ClearTile(blocks[blockIndex].transform.position);
+                    Destroy(blocks[blockIndex].gameObject);
+                    blocks[blockIndex] = null;
+
+                    matchedBlocks.Add(blockIndex);
+                }
+            }
+        }
+        foreach (var blockIndex in matchedBlocks)
+        {
+            Drop(blockIndex + boardWidth, ref nextMatchSeq);
+        }
+
+        if (matchedBlocks.Count <= 10)
+            activePiece.AddReward(matchedBlocks.Count * 0.1f);
+        else 
+            activePiece.AddReward(1f);
+
+        StartCoroutine(PrepareForMatch(nextMatchSeq));
+    }
+
+    public IEnumerator PrepareForMatch(Queue<int> matchSeq)
+    {
+        yield return new WaitForSeconds(1f);
+        Match(matchSeq);
+    } 
+
+    public void Drop(int index, ref Queue<int> dropBlocks)
+    {
+        while (index < blocks.Length && blocks[index] != null) // for each block
+        {
+            int x = index % boardWidth;   // make a copy to calculate new index
+            int y = index / boardWidth;
+            while (y - 1 >= 0 && blocks[GetBlockIndexAt(y-1, x)] == null) 
             {
                 y--;
             }
             
-            int index = TranslateBlock(row, col, y, x);
-            drop.Add(index);
+            int newIndex = TranslateBlock(index / boardWidth, index % boardWidth, y, x);
+            dropBlocks.Enqueue(newIndex);
 
-            row++; // check the next upper block
+            index += boardWidth; // check the next upper block
         }
+
+        activePiece.ghost.UpdatePos();
+    }
+
+    public int GetBlockIndexAt(int row, int col)
+    {
+        return row * boardWidth + col;
     }
 
     public int TranslateBlock(int startRow, int startCol, int endRow, int endCol)
     {
-        var block = blocks[startRow, startCol];
+        int startIndex = GetBlockIndexAt(startRow, startCol);
+        int endIndex = GetBlockIndexAt(endRow, endCol);
+        if (startIndex != endIndex)
+        {
+            var block = blocks[startIndex];
 
-        ClearTile(blocks[startRow, startCol].transform.position); // clear original position
-        blocks[startRow, startCol] = null;
+            ClearTile(blocks[startIndex].transform.position); // clear original position
+            blocks[startIndex] = null;
 
-        block.transform.Translate(new Vector3(endCol-startCol, 0, endRow-startRow));
-        blocks[endRow, endCol] = block;
-        SetTile(blocks[endRow, endCol].transform.position);
+            block.transform.Translate(new Vector3(endCol-startCol, 0, endRow-startRow));
+            blocks[endIndex] = block;
+            SetTile(blocks[endIndex].transform.position);
+        }
 
-        block.index = endRow * boardWidth + endCol;
-        return block.index;
+        return endIndex;
     }
 
-    public List<int> BFS(int row, int col, int colour)
+    public List<int> BFS(Block[] blocks, int row, int col, int colour)
     {
         List<int> matchBlocks = new List<int>();
         Queue<int> searchBlocks = new Queue<int>();
-        matchBlocks.Add(row * boardWidth + col);
-        searchBlocks.Enqueue(row * boardWidth + col);
+        
+        matchBlocks.Add(GetBlockIndexAt(row, col));
+        searchBlocks.Enqueue(GetBlockIndexAt(row, col));
 
         while (searchBlocks.Count > 0)
         {
@@ -209,9 +269,9 @@ public class Board : MonoBehaviour
             int searchIndex;
 
             searchIndex = index + boardWidth;
-            if (y + 1 < boardDepth && blocks[y+1, x] && !matchBlocks.Contains(searchIndex))
+            if (y + 1 < boardDepth && blocks[searchIndex] && !matchBlocks.Contains(searchIndex))
             {
-                if (blocks[y+1, x].colour == colour)
+                if (blocks[searchIndex].colour == colour)
                 {
                     matchBlocks.Add(searchIndex);
                     searchBlocks.Enqueue(searchIndex);
@@ -219,9 +279,9 @@ public class Board : MonoBehaviour
             }
 
             searchIndex = index + 1;
-            if (x + 1 < boardWidth && blocks[y, x+1] && !matchBlocks.Contains(searchIndex))
+            if (x + 1 < boardWidth && blocks[searchIndex] && !matchBlocks.Contains(searchIndex))
             {
-                if (blocks[y, x+1].colour == colour)
+                if (blocks[searchIndex].colour == colour)
                 {
                     matchBlocks.Add(searchIndex);
                     searchBlocks.Enqueue(searchIndex);
@@ -229,9 +289,9 @@ public class Board : MonoBehaviour
             }
 
             searchIndex = index - boardWidth;
-            if (y-1 >= 0 && blocks[y-1, x] && !matchBlocks.Contains(searchIndex))
+            if (y-1 >= 0 && blocks[searchIndex] && !matchBlocks.Contains(searchIndex))
             {
-                if (blocks[y-1, x].colour == colour)
+                if (blocks[searchIndex].colour == colour)
                 {
                     matchBlocks.Add(searchIndex);
                     searchBlocks.Enqueue(searchIndex);
@@ -239,9 +299,9 @@ public class Board : MonoBehaviour
             }
 
             searchIndex = index - 1;
-            if (x-1 >= 0 && blocks[y, x-1] && !matchBlocks.Contains(searchIndex))
+            if (x-1 >= 0 && blocks[searchIndex] && !matchBlocks.Contains(searchIndex))
             {
-                if (blocks[y, x-1].colour == colour)
+                if (blocks[searchIndex].colour == colour)
                 {
                     matchBlocks.Add(searchIndex);
                     searchBlocks.Enqueue(searchIndex);
@@ -253,8 +313,6 @@ public class Board : MonoBehaviour
 
         return matchBlocks;
     }
-
-
 
     public void ClearTile(Vector3 pos)
     {
@@ -268,7 +326,7 @@ public class Board : MonoBehaviour
         this.tilemap.SetTile(cellPos, null); // tile is removed if occupied
     }
 
-    public bool IsValidPosition(Piece piece, Vector3 position, Vector3Int[] route)
+    public bool IsValidPosition(PieceAgent piece, Vector3 position, Vector3Int[] route)
     {
         for (int i = 0; i < route.Length; i++)
         {

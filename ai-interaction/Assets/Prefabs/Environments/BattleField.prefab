@@ -584,7 +584,7 @@ GameObject:
   - component: {fileID: 1509747633371860401}
   - component: {fileID: 1509747633371860402}
   m_Layer: 0
-  m_Name: Environment
+  m_Name: BattleField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
