@@ -17,12 +17,13 @@ public class PieceAgent : Agent
     private bool m_MoveLeft;
     private bool m_MoveRight;
     private bool m_Rotate; 
+    private bool m_MoveDown;
 
     public Board board;
     public Trap trapData { get; private set; }
 
     public Vector3Int spawnPosition; // local position relative to the board
-    public float dropSpeed = 2f;
+    public float dropSpeed = 1f;
 
     public Block[] trapBlockPrefab;
     public Block[] trapBlocks;
@@ -32,25 +33,56 @@ public class PieceAgent : Agent
 
     public int rotationIndex { get; private set; }
 
-    public int match { get; set; }
+    public int match { get; set; } // number of current match if push to the end
 
-    public bool isMatching = false;
+    public bool EnableMoveDown = true;
+
+    public BufferSensorComponent m_AgentBuffer;
+
+    EnvironmentParameters m_ResetParams;
+    public int DefaultSpawningRange;
+    public int m_SpawningRange {get; set;} // input the number of rows
 
     public override void Initialize()
     {
         input = GetComponent<MatchController>();
+
+        m_AgentBuffer = GetComponent<BufferSensorComponent>();
+
+        m_ResetParams = Academy.Instance.EnvironmentParameters;
     }
 
     public override void OnEpisodeBegin()
     {
+        m_SpawningRange = (int)m_ResetParams.GetWithDefault("spawn_range", DefaultSpawningRange);
+        board.SpawnMonster(m_SpawningRange);
+
         SetNewTrap();
     }
 
     public void SetNewTrap()
     {
+        EvaluateMove();
         ResetTrap();
         trapData =  board.GetRandomTrap();
         CreateTrap();
+    }
+
+    // Reward System
+    public void EvaluateMove()
+    {
+        // Debug.Log("Current Level: " + board.GetCurrentLevel());
+        // Debug.Log("Number of Monsters: " + board.numberOfMonsters);
+        // Debug.Log("Total number of blocks: " + board.numberOfBlocks);
+
+        int level = board.GetCurrentLevel();
+        if (level > board.boardDepth - 3)
+            AddReward(-0.3f);
+        AddReward((board.boardDepth - level)/board.boardDepth);
+        if (board.numberOfMonsters > 0)
+            AddReward(1/board.numberOfMonsters);
+        if (board.numberOfBlocks > 0)
+            AddReward(1/board.numberOfBlocks);
     }
 
     private void ResetTrap()
@@ -72,8 +104,11 @@ public class PieceAgent : Agent
 
         if (!this.board.IsValidPosition(this, this.transform.position, this.route))
         {
-            SetReward(-1f);
-            this.board.GameOver();
+            this.board.GameOver(false);  //  Game Over !!!!!
+        }
+        else if (board.numberOfMonsters == 0)
+        {
+            this.board.GameOver(true);
         }
         else
         {
@@ -118,7 +153,7 @@ public class PieceAgent : Agent
     {
         actionEnabled = false;
 
-        ghost.Reset();
+        ghost.Reset(); // reset the ghost before occupy
 
         this.board.Occupy(this); 
         
@@ -126,13 +161,41 @@ public class PieceAgent : Agent
         foreach (var block in trapBlocks) 
             matchSeq.Enqueue(block.index);
 
-        isMatching = true;
         StartCoroutine(this.board.PrepareForMatch(matchSeq));  
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(match);
+        sensor.AddObservation(board.GetCurrentLevel());
+        
+        sensor.AddObservation(board.numberOfMonsters);
+        sensor.AddObservation(board.numberOfBlocks); 
+
+        sensor.AddObservation(actionCommand);
+        sensor.AddObservation(m_MoveLeft);
+        sensor.AddObservation(m_MoveRight);
+        sensor.AddObservation(m_Rotate);
+        sensor.AddObservation(m_MoveDown);
+
+        if (trapBlocks != null)
+        {
+            for (int i = 0; i < trapBlocks.Length; i++) // make it dynamic
+            {
+                if (trapBlocks[i])
+                    m_AgentBuffer.AppendObservation(GetTrapBlockData(i));
+            }  
+        }
+    }
+
+    public float[] GetTrapBlockData(int i)
+    {
+        var blockData = new float[4];
+        blockData[0] = this.transform.localPosition.x + trapBlocks[i].transform.localPosition.x;
+        blockData[1] = ghost.transform.localPosition.x + trapBlocks[i].transform.localPosition.x;
+        blockData[2] = this.transform.localPosition.z + trapBlocks[i].transform.localPosition.z;
+        blockData[3] = ghost.transform.localPosition.z + trapBlocks[i].transform.localPosition.z;
+        return blockData;
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -148,6 +211,7 @@ public class PieceAgent : Agent
         m_MoveLeft = (int)discreteActions[0] > 0;
         m_MoveRight = (int)discreteActions[1] > 0;
         m_Rotate = (int)discreteActions[2] > 0;
+        m_MoveDown = (int)discreteActions[3] > 0;
 
         if (actionCommand && actionEnabled)
         {
@@ -169,6 +233,11 @@ public class PieceAgent : Agent
             }
 
             StartCoroutine(CoolDown(0.1f));
+        }
+
+        if (m_MoveDown && EnableMoveDown)
+        {
+            Move(-Vector3Int.forward);
         }
     }
 
@@ -253,7 +322,7 @@ public class PieceAgent : Agent
         }
     }
 
-    private void FastDrop()
+    private void FastPush() // playable only for human
     {
         this.transform.position = ghost.transform.position;
         Place();
@@ -278,10 +347,14 @@ public class PieceAgent : Agent
         return false;
     }
 
+    public int DistanceToGhost()
+    {
+        return (int)Vector3.Distance(this.transform.position, ghost.transform.position);
+    }
+
     public bool CloseToGhost()
     {
-        float distance = Vector3.Distance(this.transform.position, ghost.transform.position);
-        return distance <= 2;
+        return DistanceToGhost() <= 2;
     }
 
     private int Wrap(int input, int min, int max)
@@ -298,6 +371,7 @@ public class PieceAgent : Agent
         discreteActionsOut[0] = input.MoveLeft() ? 1 : 0;
         discreteActionsOut[1] = input.MoveRight() ? 1 : 0;
         discreteActionsOut[2] = input.Rotate() ? 1 : 0;
+        discreteActionsOut[3] = input.MoveDown() ? 1 : 0;
     }
 
 }

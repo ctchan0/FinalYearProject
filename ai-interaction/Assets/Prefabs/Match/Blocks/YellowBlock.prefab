@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3740226163296320016}
   m_Layer: 0
   m_Name: YellowBlock
-  m_TagString: Untagged
+  m_TagString: Yellow
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -45,7 +45,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.95, y: 1, z: 0.95}
   m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!114 &3740226163296320016
 MonoBehaviour:
@@ -59,6 +59,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dff86445ae6b9de4f9e6352e32f9ba25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  type: 1
   colour: 3
 --- !u!1001 &6338900855193734970
 PrefabInstance:

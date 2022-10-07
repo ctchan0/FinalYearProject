@@ -2447,6 +2447,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridTile: {fileID: 11400000, guid: 3faa062357b69164fa6ccd39e351a24d, type: 2}
+  boardWidth: 10
+  boardDepth: 20
   activePiece: {fileID: 4579976489654459740}
   traps:
   - shape: 0
@@ -2456,14 +2458,13 @@ MonoBehaviour:
   - shape: 4
   - shape: 5
   - shape: 6
-  boardWidth: 10
-  boardDepth: 20
-  blockManager: {fileID: 1412467699946167805}
-  blocks: []
   monsterBlocks:
   - {fileID: 2006537468402525812, guid: db9c3ba3b6e386743b9ace52853a1ee5, type: 3}
   - {fileID: 580585264208979498, guid: bfb37139fc4e0854890dfc8fc1d005c4, type: 3}
   - {fileID: 631401114387085060, guid: 2d04b45e9214730469a6ca9c35605048, type: 3}
+  blockManager: {fileID: 1412467699946167805}
+  blocks: []
+  numberOfMonsters: 0
   gameOver: 0
 --- !u!1 &86626013124011863
 GameObject:
@@ -2877,10 +2878,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 86626013379621647}
     m_Modifications:
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3176532770943899201, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
       propertyPath: m_Name
       value: PieceAgent
@@ -2937,10 +2934,6 @@ PrefabInstance:
       propertyPath: ghost
       value: 
       objectReference: {fileID: 1412467700915924919}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: dropSpeed
-      value: 0.5
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
 --- !u!114 &4579976489654459740 stripped

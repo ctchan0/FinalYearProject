@@ -8,24 +8,30 @@ using Random = UnityEngine.Random;
 
 public class Board : MonoBehaviour
 {
+    // tile 
     private GridLayout gridLayout;
     public Tilemap tilemap { get; private set; }
     [SerializeField] private TileBase gridTile;
 
-    public PieceAgent activePiece;
-
-    public Trap[] traps;
-
+    // board
     public int boardWidth = 10;
     public int boardDepth = 20;
 
+    // piece
+    public PieceAgent activePiece;
+    public Trap[] traps; // prefab data
+    public Block[] monsterBlocks; // prefab data
+
+    // blocks management
     public GameObject blockManager;
     public Block[] blocks;
-    public Block[] monsterBlocks;
 
+    // game state / parameters
+    public int numberOfMonsters;
+    public int numberOfBlocks {get; set; }
     public bool gameOver = false;
 
-    public Block[] GetBlocksList() // shadow copy
+    public Block[] GetBlocksList() // <= shadow copy
     {
         var blocksCopy = new Block[boardDepth * boardWidth]; 
         for (int i = 0; i < blocks.Length; i++)
@@ -51,34 +57,46 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(SpawnMonsterBlock());
+        
     }
 
-    public IEnumerator SpawnMonsterBlock()
+    public void SpawnMonsterAt(int index)
     {
-        while (true)
-        {
-            while(activePiece.CloseToGhost())
-            {
-                yield return new WaitForSeconds(0.1f);
-            }
+        int spawn = Random.Range(0, 2);
+        if (spawn == 0) return; // chance of not spawning
 
-            AllBlocksMoveUp();
-            // spawn monster
-            for (int j = 0; j < boardWidth; j++)
-            {
-                int n = Random.Range(-1, monsterBlocks.Length);
-                if (n == -1) continue;
-                Block monsterBlock = Instantiate(monsterBlocks[n], 
-                                                blockManager.transform.position + new Vector3(j, 0, 0), 
-                                                monsterBlocks[n].transform.rotation);
-                PlaceBlock(monsterBlock, 0, j);
-            }
-
-            activePiece.ghost.UpdatePos();
-            yield return new WaitForSeconds(30f);
-        }
+        int n = Random.Range(0, monsterBlocks.Length);
+        int row = index / boardWidth;
+        int col = index % boardWidth;
+        Block monsterBlock = Instantiate(monsterBlocks[n], 
+                                        blockManager.transform.position + new Vector3(col, 0, row), 
+                                        monsterBlocks[n].transform.rotation);
+        numberOfMonsters++;
+        PlaceBlock(monsterBlock, row, col);
     }
+
+    public void SpawnMonster(int numOfRow)
+    {
+        for (int i = 0; i < numOfRow * boardWidth; i++)
+        {
+            SpawnMonsterAt(i);
+        }
+        activePiece.ghost.UpdatePos();
+    }
+
+    /*
+    public IEnumerator SpawnMonsterBlock(int spawnInterval)
+    {
+        while(activePiece.CloseToGhost())
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        AllBlocksMoveUp(1);
+        SpawnMonster(1);
+        
+        yield return new WaitForSeconds(30f);
+    } */
 
     public void PlaceBlock(Block block, int row, int col)
     {
@@ -89,17 +107,27 @@ public class Board : MonoBehaviour
         SetTile(blocks[block.index].transform.position);
     }
 
-    private void AllBlocksMoveUp()
+    public int GetCurrentLevel()
     {
-        for (int i = boardDepth-2; i >= 0; i--) // for each row except the top
+        int index = blocks.Length - 1;
+        while (index >= 0 && blocks[index] == null)
+        {
+            index = index - 1;
+        }
+        return (int)(index / boardWidth) + 1;
+    }
+
+    private void AllBlocksMoveUp(int degreeOfRow)
+    {
+        for (int i = boardDepth-1-degreeOfRow; i >= 0; i--) // for each row except the top
         {
             for (int j = 0; j < boardWidth; j++) // for each column
             {
                 int index = i * boardWidth + j;
                 if (blocks[index] == null) continue;
 
-                if (blocks[index + boardWidth] == null)
-                    TranslateBlock(i, j, i+1, j);
+                if (blocks[index + (boardWidth*degreeOfRow)] == null) // won't out of bound
+                    TranslateBlock(i, j, i+degreeOfRow, j);
             }
         }
     }
@@ -110,9 +138,18 @@ public class Board : MonoBehaviour
         return this.traps[random];
     }
 
-    public void GameOver()
+    public void GameOver(bool win)
     {
-        print("Game Over!");
+        if (win)
+        {
+            print("Win");
+            activePiece.SetReward(1);
+        }
+        else
+        {
+            print("Lose");
+            activePiece.SetReward(-1);
+        }
         gameOver = true;
 
         Reset();
@@ -120,7 +157,7 @@ public class Board : MonoBehaviour
 
     public void Reset()
     {
-        for (int i = blocks.Length - 1; i >= 0; i--)
+        for (int i = blocks.Length - 1; i >= 0; i--) // clear the board
         {
             if (blocks[i] == null) continue;
             var block = blocks[i];
@@ -128,15 +165,11 @@ public class Board : MonoBehaviour
             Destroy(block.gameObject);
             blocks[i] = null;
         }
-        for (int i = 0; i < activePiece.trapBlocks.Length; i++)
-        {
-            if (activePiece.trapBlocks[i] == null) continue;
-            var block = activePiece.trapBlocks[i];
-            Destroy(block.gameObject);
-            activePiece.trapBlocks[i] = null;
-        }
-        gameOver = false;
+        
+        numberOfBlocks = 0;
+        numberOfMonsters = 0;
 
+        gameOver = false; // restart
         activePiece.EndEpisode();
     }
 
@@ -161,6 +194,7 @@ public class Board : MonoBehaviour
     {
         if (matchSeq.Count == 0) 
         {
+            activePiece.AddReward((boardDepth - GetCurrentLevel()) / boardDepth);
             activePiece.SetNewTrap();
             return;
         }
@@ -181,6 +215,10 @@ public class Board : MonoBehaviour
             {
                 foreach (var blockIndex in match)
                 {
+                    if (blocks[blockIndex].type == BlockType.monster)
+                    {
+                        numberOfMonsters--;
+                    }
                     ClearTile(blocks[blockIndex].transform.position);
                     Destroy(blocks[blockIndex].gameObject);
                     blocks[blockIndex] = null;
@@ -188,23 +226,22 @@ public class Board : MonoBehaviour
                     matchedBlocks.Add(blockIndex);
                 }
             }
+            else
+            {
+                //
+            }
         }
         foreach (var blockIndex in matchedBlocks)
         {
             Drop(blockIndex + boardWidth, ref nextMatchSeq);
         }
 
-        if (matchedBlocks.Count <= 10)
-            activePiece.AddReward(matchedBlocks.Count * 0.1f);
-        else 
-            activePiece.AddReward(1f);
-
         StartCoroutine(PrepareForMatch(nextMatchSeq));
     }
 
     public IEnumerator PrepareForMatch(Queue<int> matchSeq)
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         Match(matchSeq);
     } 
 
@@ -316,12 +353,16 @@ public class Board : MonoBehaviour
 
     public void ClearTile(Vector3 pos)
     {
+        numberOfBlocks--;
+
         Vector3Int cellPos = gridLayout.WorldToCell(pos);
         this.tilemap.SetTile(cellPos, gridTile); // tile is displayed if not occupied
     }
 
     public void SetTile(Vector3 pos)
     {
+        numberOfBlocks++;
+
         Vector3Int cellPos = gridLayout.WorldToCell(pos); 
         this.tilemap.SetTile(cellPos, null); // tile is removed if occupied
     }

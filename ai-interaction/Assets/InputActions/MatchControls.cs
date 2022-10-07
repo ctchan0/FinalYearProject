@@ -53,6 +53,15 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""MoveDown"",
+                    ""type"": ""Value"",
+                    ""id"": ""bafc2928-f16c-454b-b6a5-01b15bca1346"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -88,6 +97,17 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                     ""action"": ""Rotate"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2ccfb891-cbba-4820-a28f-5d0c29068f74"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""MoveDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -99,6 +119,7 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
         m_Piece_MoveLeft = m_Piece.FindAction("MoveLeft", throwIfNotFound: true);
         m_Piece_MoveRight = m_Piece.FindAction("MoveRight", throwIfNotFound: true);
         m_Piece_Rotate = m_Piece.FindAction("Rotate", throwIfNotFound: true);
+        m_Piece_MoveDown = m_Piece.FindAction("MoveDown", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -161,6 +182,7 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
     private readonly InputAction m_Piece_MoveLeft;
     private readonly InputAction m_Piece_MoveRight;
     private readonly InputAction m_Piece_Rotate;
+    private readonly InputAction m_Piece_MoveDown;
     public struct PieceActions
     {
         private @MatchControls m_Wrapper;
@@ -168,6 +190,7 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
         public InputAction @MoveLeft => m_Wrapper.m_Piece_MoveLeft;
         public InputAction @MoveRight => m_Wrapper.m_Piece_MoveRight;
         public InputAction @Rotate => m_Wrapper.m_Piece_Rotate;
+        public InputAction @MoveDown => m_Wrapper.m_Piece_MoveDown;
         public InputActionMap Get() { return m_Wrapper.m_Piece; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -186,6 +209,9 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 @Rotate.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
                 @Rotate.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
                 @Rotate.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
+                @MoveDown.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
+                @MoveDown.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
+                @MoveDown.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
             }
             m_Wrapper.m_PieceActionsCallbackInterface = instance;
             if (instance != null)
@@ -199,6 +225,9 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 @Rotate.started += instance.OnRotate;
                 @Rotate.performed += instance.OnRotate;
                 @Rotate.canceled += instance.OnRotate;
+                @MoveDown.started += instance.OnMoveDown;
+                @MoveDown.performed += instance.OnMoveDown;
+                @MoveDown.canceled += instance.OnMoveDown;
             }
         }
     }
@@ -208,5 +237,6 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
         void OnMoveLeft(InputAction.CallbackContext context);
         void OnMoveRight(InputAction.CallbackContext context);
         void OnRotate(InputAction.CallbackContext context);
+        void OnMoveDown(InputAction.CallbackContext context);
     }
 }

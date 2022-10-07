@@ -24,16 +24,23 @@ public class MatchController : MonoBehaviour
 
     public bool MoveLeft()
     {
+        if (DisableInput) return false;
         return actionMap.MoveLeft.ReadValue<float>() > 0;
     }
     public bool MoveRight()
     {
+        if (DisableInput) return false;
         return actionMap.MoveRight.ReadValue<float>() > 0;
     }
     public bool Rotate()
     {
+        if (DisableInput) return false;
         return actionMap.Rotate.ReadValue<float>() > 0;
     }
-
+    public bool MoveDown()
+    {
+        if (DisableInput) return false;
+        return actionMap.MoveDown.ReadValue<float>() > 0;
+    }
     
 }

@@ -4,8 +4,5 @@ using UnityEngine;
 
 public class MonsterBlock : Block
 {
-    public void Instantiate()
-    {
-
-    }
+   
 }

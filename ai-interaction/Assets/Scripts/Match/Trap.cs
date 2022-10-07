@@ -26,4 +26,6 @@ public struct Trap
         this.route = TrapData.Route[this.shape];
         this.wallKicks = TrapData.WallKicks[this.shape];
     }
+
+    // set empty 
 }

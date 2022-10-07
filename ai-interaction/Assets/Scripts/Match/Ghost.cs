@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Ghost : MonoBehaviour
@@ -9,6 +10,7 @@ public class Ghost : MonoBehaviour
     private PieceAgent piece;
     private Board board;
     private Block[] blocks;
+    private int maxMatch = 0;
 
     private void Awake()
     {
@@ -31,6 +33,8 @@ public class Ghost : MonoBehaviour
             block.transform.SetParent(this.transform);
         }
 
+        this.maxMatch = 0;
+
         UpdatePos();
     }
 
@@ -40,7 +44,20 @@ public class Ghost : MonoBehaviour
         Vector3Int pos = piece.FindBottom();
         this.transform.position = pos;
 
+        int prev_match = piece.match; // Observe the change of match number
         piece.match = GetNumberOfMatch();
+        //if (prev_match != piece.match)
+        //    Debug.Log("Match: " + piece.match);
+
+        if (piece.match > this.maxMatch)
+        {
+            this.maxMatch = piece.match;
+            piece.AddReward(0.1f);
+        }
+        else
+        {
+            piece.AddReward(-0.1f);
+        }
     }
 
     public void Reset()
@@ -93,14 +110,24 @@ public class Ghost : MonoBehaviour
 
             int colour = blocks[index].colour;
             List<int> match = board.BFS(blocks, row, col, colour); // a list of blocks that match
+            // skip the block that has checked for a match already
+            matchSeq = new Queue<int>(matchSeq.Where(x => !match.Contains(x)));
+
+            if (match.Count >= 2)
+                numberOfMatch += match.Count;
 
             if (match.Count >= 5)
             {
+                //numberOfMatch += match.Count;
                 foreach (var blockIndex in match)
                 {
                     blocks[blockIndex] = null;
                     matchedBlocks.Add(blockIndex);
                 }
+            }
+            else
+            {
+                //
             }
         }
         foreach (var blockIndex in matchedBlocks)
@@ -108,7 +135,7 @@ public class Ghost : MonoBehaviour
             Drop(blockIndex + board.boardWidth, ref nextMatchSeq);
         }
 
-        return MatchTest(nextMatchSeq, numberOfMatch + matchedBlocks.Count);
+        return MatchTest(nextMatchSeq, numberOfMatch);
     }
 
     private void Drop(int index, ref Queue<int> dropBlocks)
