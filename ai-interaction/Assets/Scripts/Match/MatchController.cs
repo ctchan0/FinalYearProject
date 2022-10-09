@@ -32,10 +32,15 @@ public class MatchController : MonoBehaviour
         if (DisableInput) return false;
         return actionMap.MoveRight.ReadValue<float>() > 0;
     }
-    public bool Rotate()
+    public bool RotateAnticlockwise()
     {
         if (DisableInput) return false;
-        return actionMap.Rotate.ReadValue<float>() > 0;
+        return actionMap.RotateAnticlockwise.ReadValue<float>() > 0;
+    }
+    public bool RotateClockwise()
+    {
+        if (DisableInput) return false;
+        return actionMap.RotateClockwise.ReadValue<float>() > 0;
     }
     public bool MoveDown()
     {

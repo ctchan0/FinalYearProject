@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 6338900855292340103}
   - component: {fileID: 6514679586152884191}
   - component: {fileID: 3740226163296320016}
+  - component: {fileID: -6852096220479966048}
+  - component: {fileID: 7390472313723890248}
   m_Layer: 0
   m_Name: YellowBlock
   m_TagString: Yellow
@@ -42,10 +44,10 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6338900855292340100}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
+  m_IsTrigger: 1
+  m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.95, y: 1, z: 0.95}
+  m_Size: {x: 1, y: 1, z: 0.95}
   m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!114 &3740226163296320016
 MonoBehaviour:
@@ -61,6 +63,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 1
   colour: 3
+  tempMatch: 0
+  owner: {fileID: 0}
+--- !u!54 &-6852096220479966048
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6338900855292340100}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &7390472313723890248
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6338900855292340100}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.95, y: 1, z: 1}
+  m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!1001 &6338900855193734970
 PrefabInstance:
   m_ObjectHideFlags: 0

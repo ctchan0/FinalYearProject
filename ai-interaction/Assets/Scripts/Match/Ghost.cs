@@ -10,7 +10,8 @@ public class Ghost : MonoBehaviour
     private PieceAgent piece;
     private Board board;
     private Block[] blocks;
-    private int maxMatch = 0;
+    private int prevMatch = 0;
+    private int prevPosition = 0;
 
     private void Awake()
     {
@@ -33,31 +34,80 @@ public class Ghost : MonoBehaviour
             block.transform.SetParent(this.transform);
         }
 
-        this.maxMatch = 0;
+        this.prevMatch = 0;
+        this.prevPosition = board.boardDepth;
+        // this.hasAMatch = false;
 
         UpdatePos();
     }
 
-    public void UpdatePos() // always update position
+    public void UpdatePos() // always update position and check optimal !!!!!!!!
     {
         if (piece == null || board.gameOver) return;
+        
         Vector3Int pos = piece.FindBottom();
         this.transform.position = pos;
-
-        int prev_match = piece.match; // Observe the change of match number
-        piece.match = GetNumberOfMatch();
-        //if (prev_match != piece.match)
-        //    Debug.Log("Match: " + piece.match);
-
-        if (piece.match > this.maxMatch)
+        if (this.transform.localPosition.z < this.prevPosition)
         {
-            this.maxMatch = piece.match;
+            piece.AddReward(0.2f);
+            // print("This is a better position!");
+        }
+        else if (this.transform.localPosition.z > this.prevPosition)
+        {
+            piece.AddReward(-0.2f);
+        }
+        else 
+        {
             piece.AddReward(0.1f);
+        }
+        this.prevPosition = (int)this.transform.localPosition.z;
+
+        piece.matches = GetMatches();
+        piece.numberOfMatches = GetNumberOfMatch(piece.matches);
+        if (HasAMatch(piece.matches))
+            piece.AddReward(0.2f);
+        //print("MatchList:");
+        //foreach (var match in piece.matches)
+        //{
+        //    Debug.Log(match);
+        //}
+        if (piece.numberOfMatches > this.prevMatch)
+        {
+            piece.AddReward(0.2f);
+            // print("Here is a better match!");
+        }
+        else if (piece.numberOfMatches < this.prevMatch)
+        {
+            piece.AddReward(-0.2f);
         }
         else
         {
-            piece.AddReward(-0.1f);
+            piece.AddReward(0.1f);
         }
+        this.prevMatch = piece.numberOfMatches;
+
+    }
+
+    public int GetNumberOfMatch(List<int> matches)
+    {
+        if (matches == null) return 0;
+        int n = 0;
+        foreach (var match in matches)
+        {
+            n += match;
+        }
+        return n;
+    }
+
+    public bool HasAMatch(List<int> matches)
+    {
+        if (matches == null) return false;
+        foreach (var match in matches)
+        {
+            if (match >= 5)
+                return true;
+        }
+        return false;
     }
 
     public void Reset()
@@ -74,10 +124,10 @@ public class Ghost : MonoBehaviour
         blocks = null;
     }
 
-    public int GetNumberOfMatch()
+    public List<int> GetMatches()
     {
         blocks = board.GetBlocksList();
-        if (blocks == null) return 0;
+        if (blocks == null) return null;
 
         var matchSeq = new Queue<int>();
 
@@ -89,15 +139,18 @@ public class Ghost : MonoBehaviour
             ghostBlocks[i].index = index;
             matchSeq.Enqueue(index);
         } 
-        return MatchTest(matchSeq, 0);
+        return MatchTest(matchSeq);
     }
 
-    public int MatchTest(Queue<int> matchSeq, int numberOfMatch)
+    public List<int> MatchTest(Queue<int> matchSeq, List<int> matches = null)
     {
-        if (matchSeq.Count == 0) 
-            return numberOfMatch;
+        if (matches == null)
+            matches = new List<int>();
 
-        if (blocks == null) return 0;
+        if (matchSeq.Count == 0) 
+            return matches;
+
+        if (blocks == null) return null;
 
         var nextMatchSeq = new Queue<int>();
         var matchedBlocks = new List<int>();
@@ -114,20 +167,16 @@ public class Ghost : MonoBehaviour
             matchSeq = new Queue<int>(matchSeq.Where(x => !match.Contains(x)));
 
             if (match.Count >= 2)
-                numberOfMatch += match.Count;
+                matches.Add(match.Count);
 
             if (match.Count >= 5)
             {
-                //numberOfMatch += match.Count;
+                // hasAMatch = true;
                 foreach (var blockIndex in match)
                 {
                     blocks[blockIndex] = null;
                     matchedBlocks.Add(blockIndex);
                 }
-            }
-            else
-            {
-                //
             }
         }
         foreach (var blockIndex in matchedBlocks)
@@ -135,7 +184,7 @@ public class Ghost : MonoBehaviour
             Drop(blockIndex + board.boardWidth, ref nextMatchSeq);
         }
 
-        return MatchTest(nextMatchSeq, numberOfMatch);
+        return MatchTest(nextMatchSeq, matches);
     }
 
     private void Drop(int index, ref Queue<int> dropBlocks)

@@ -143,7 +143,7 @@ public class Board : MonoBehaviour
         if (win)
         {
             print("Win");
-            activePiece.SetReward(1);
+            activePiece.AddReward(1);
         }
         else
         {
@@ -213,11 +213,13 @@ public class Board : MonoBehaviour
 
             if (match.Count >= 5)
             {
+                activePiece.HasAMatch();
                 foreach (var blockIndex in match)
                 {
                     if (blocks[blockIndex].type == BlockType.monster)
                     {
                         numberOfMonsters--;
+                        activePiece.ClearMonster();
                     }
                     ClearTile(blocks[blockIndex].transform.position);
                     Destroy(blocks[blockIndex].gameObject);

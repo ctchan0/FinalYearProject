@@ -24,9 +24,18 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Rotate",
+                    "name": "RotateAnticlockwise",
                     "type": "Value",
                     "id": "cf0bac21-1974-487c-9599-5605cd65cd98",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "RotateClockwise",
+                    "type": "Value",
+                    "id": "94fcf7f8-3c6c-4140-bbb6-1534007bfa01",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -46,7 +55,7 @@
                 {
                     "name": "",
                     "id": "46309e1c-aaf4-4742-b60d-066b843ba901",
-                    "path": "<Keyboard>/q",
+                    "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -57,7 +66,7 @@
                 {
                     "name": "",
                     "id": "5e99ca2b-aaa5-4cec-85ed-320bef82c3f6",
-                    "path": "<Keyboard>/e",
+                    "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -68,11 +77,11 @@
                 {
                     "name": "",
                     "id": "88dd09c6-de28-4b87-8c2a-af217e235042",
-                    "path": "<Keyboard>/r",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Rotate",
+                    "action": "RotateAnticlockwise",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -84,6 +93,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "MoveDown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "41ec3376-b810-4671-bc72-753c664d76ac",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateClockwise",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

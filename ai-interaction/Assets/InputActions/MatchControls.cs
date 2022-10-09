@@ -46,9 +46,18 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Rotate"",
+                    ""name"": ""RotateAnticlockwise"",
                     ""type"": ""Value"",
                     ""id"": ""cf0bac21-1974-487c-9599-5605cd65cd98"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""RotateClockwise"",
+                    ""type"": ""Value"",
+                    ""id"": ""94fcf7f8-3c6c-4140-bbb6-1534007bfa01"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -68,7 +77,7 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""46309e1c-aaf4-4742-b60d-066b843ba901"",
-                    ""path"": ""<Keyboard>/q"",
+                    ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -79,7 +88,7 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""5e99ca2b-aaa5-4cec-85ed-320bef82c3f6"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -90,11 +99,11 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""88dd09c6-de28-4b87-8c2a-af217e235042"",
-                    ""path"": ""<Keyboard>/r"",
+                    ""path"": ""<Keyboard>/q"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Rotate"",
+                    ""action"": ""RotateAnticlockwise"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -108,6 +117,17 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                     ""action"": ""MoveDown"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""41ec3376-b810-4671-bc72-753c664d76ac"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RotateClockwise"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -118,7 +138,8 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
         m_Piece = asset.FindActionMap("Piece", throwIfNotFound: true);
         m_Piece_MoveLeft = m_Piece.FindAction("MoveLeft", throwIfNotFound: true);
         m_Piece_MoveRight = m_Piece.FindAction("MoveRight", throwIfNotFound: true);
-        m_Piece_Rotate = m_Piece.FindAction("Rotate", throwIfNotFound: true);
+        m_Piece_RotateAnticlockwise = m_Piece.FindAction("RotateAnticlockwise", throwIfNotFound: true);
+        m_Piece_RotateClockwise = m_Piece.FindAction("RotateClockwise", throwIfNotFound: true);
         m_Piece_MoveDown = m_Piece.FindAction("MoveDown", throwIfNotFound: true);
     }
 
@@ -181,7 +202,8 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
     private IPieceActions m_PieceActionsCallbackInterface;
     private readonly InputAction m_Piece_MoveLeft;
     private readonly InputAction m_Piece_MoveRight;
-    private readonly InputAction m_Piece_Rotate;
+    private readonly InputAction m_Piece_RotateAnticlockwise;
+    private readonly InputAction m_Piece_RotateClockwise;
     private readonly InputAction m_Piece_MoveDown;
     public struct PieceActions
     {
@@ -189,7 +211,8 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
         public PieceActions(@MatchControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @MoveLeft => m_Wrapper.m_Piece_MoveLeft;
         public InputAction @MoveRight => m_Wrapper.m_Piece_MoveRight;
-        public InputAction @Rotate => m_Wrapper.m_Piece_Rotate;
+        public InputAction @RotateAnticlockwise => m_Wrapper.m_Piece_RotateAnticlockwise;
+        public InputAction @RotateClockwise => m_Wrapper.m_Piece_RotateClockwise;
         public InputAction @MoveDown => m_Wrapper.m_Piece_MoveDown;
         public InputActionMap Get() { return m_Wrapper.m_Piece; }
         public void Enable() { Get().Enable(); }
@@ -206,9 +229,12 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 @MoveRight.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveRight;
                 @MoveRight.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveRight;
                 @MoveRight.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveRight;
-                @Rotate.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
-                @Rotate.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
-                @Rotate.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotate;
+                @RotateAnticlockwise.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateAnticlockwise;
+                @RotateAnticlockwise.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateAnticlockwise;
+                @RotateAnticlockwise.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateAnticlockwise;
+                @RotateClockwise.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateClockwise;
+                @RotateClockwise.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateClockwise;
+                @RotateClockwise.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnRotateClockwise;
                 @MoveDown.started -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
                 @MoveDown.performed -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
                 @MoveDown.canceled -= m_Wrapper.m_PieceActionsCallbackInterface.OnMoveDown;
@@ -222,9 +248,12 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
                 @MoveRight.started += instance.OnMoveRight;
                 @MoveRight.performed += instance.OnMoveRight;
                 @MoveRight.canceled += instance.OnMoveRight;
-                @Rotate.started += instance.OnRotate;
-                @Rotate.performed += instance.OnRotate;
-                @Rotate.canceled += instance.OnRotate;
+                @RotateAnticlockwise.started += instance.OnRotateAnticlockwise;
+                @RotateAnticlockwise.performed += instance.OnRotateAnticlockwise;
+                @RotateAnticlockwise.canceled += instance.OnRotateAnticlockwise;
+                @RotateClockwise.started += instance.OnRotateClockwise;
+                @RotateClockwise.performed += instance.OnRotateClockwise;
+                @RotateClockwise.canceled += instance.OnRotateClockwise;
                 @MoveDown.started += instance.OnMoveDown;
                 @MoveDown.performed += instance.OnMoveDown;
                 @MoveDown.canceled += instance.OnMoveDown;
@@ -236,7 +265,8 @@ public partial class @MatchControls : IInputActionCollection2, IDisposable
     {
         void OnMoveLeft(InputAction.CallbackContext context);
         void OnMoveRight(InputAction.CallbackContext context);
-        void OnRotate(InputAction.CallbackContext context);
+        void OnRotateAnticlockwise(InputAction.CallbackContext context);
+        void OnRotateClockwise(InputAction.CallbackContext context);
         void OnMoveDown(InputAction.CallbackContext context);
     }
 }

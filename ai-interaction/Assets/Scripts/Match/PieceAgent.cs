@@ -10,34 +10,32 @@ using Random = UnityEngine.Random;
 
 public class PieceAgent : Agent 
 {
+    // Decisions
     private MatchController input;
     // public bool disableInputCollectionInHeuristicCallback;
-    private bool actionCommand = true;
+    private bool m_IsDecisionStep;
     private bool actionEnabled = true;
-    private bool m_MoveLeft;
-    private bool m_MoveRight;
-    private bool m_Rotate; 
+    private int m_Move;
+    private int m_Rotate; 
+    public bool EnableMoveDown = true;
     private bool m_MoveDown;
 
+    public BufferSensorComponent m_TrapBuffer;
+    public BufferSensorComponent m_MatchBuffer;
     public Board board;
     public Trap trapData { get; private set; }
-
-    public Vector3Int spawnPosition; // local position relative to the board
-    public float dropSpeed = 1f;
-
+    public int rotationIndex { get; private set; }
     public Block[] trapBlockPrefab;
     public Block[] trapBlocks;
     public Vector3Int[] route { get; private set; }
-
     public Ghost ghost;
 
-    public int rotationIndex { get; private set; }
+    // Initial Status
+    public Vector3Int spawnPosition; // local position relative to the board
+    public float dropSpeed = 1f;
 
-    public int match { get; set; } // number of current match if push to the end
-
-    public bool EnableMoveDown = true;
-
-    public BufferSensorComponent m_AgentBuffer;
+    public List<int> matches {get; set;}
+    public int numberOfMatches {get; set;}
 
     EnvironmentParameters m_ResetParams;
     public int DefaultSpawningRange;
@@ -47,7 +45,9 @@ public class PieceAgent : Agent
     {
         input = GetComponent<MatchController>();
 
-        m_AgentBuffer = GetComponent<BufferSensorComponent>();
+        var buffer = GetComponents<BufferSensorComponent>();
+        m_TrapBuffer = buffer[0];
+        m_MatchBuffer = buffer[1];
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
     }
@@ -76,7 +76,7 @@ public class PieceAgent : Agent
         // Debug.Log("Total number of blocks: " + board.numberOfBlocks);
 
         int level = board.GetCurrentLevel();
-        if (level > board.boardDepth - 3)
+        if (level > board.boardDepth - 2)
             AddReward(-0.3f);
         AddReward((board.boardDepth - level)/board.boardDepth);
         if (board.numberOfMonsters > 0)
@@ -85,9 +85,26 @@ public class PieceAgent : Agent
             AddReward(1/board.numberOfBlocks);
     }
 
+    public void HasAMatch()
+    {
+        AddReward(0.3f);
+    }
+
+    public void LinkBlock()
+    {
+        AddReward(0.1f);
+    }
+
+    public void ClearMonster()
+    {
+        AddReward(0.5f);
+    }
+
     private void ResetTrap()
     {
         this.transform.position = spawnPosition + board.transform.position;
+        foreach (var block in trapBlocks)
+            block.owner = null;
         this.trapBlocks = null;
         this.route = null;
     }
@@ -122,11 +139,13 @@ public class PieceAgent : Agent
                 var block = Instantiate(trapBlockPrefab[n], pos, Quaternion.identity);
                 trapBlocks[i] = block;
                 block.transform.SetParent(this.transform);
+                block.owner = this;
 
                 pos = route[i+1] + this.transform.position; // route[i]: offset from start position
                 block = Instantiate(trapBlockPrefab[n], pos, Quaternion.identity);
                 trapBlocks[i+1] = block;
                 block.transform.SetParent(this.transform);
+                block.owner = this;
             }
 
             this.rotationIndex = 0;
@@ -159,43 +178,68 @@ public class PieceAgent : Agent
         
         var matchSeq = new Queue<int>();
         foreach (var block in trapBlocks) 
+        {
             matchSeq.Enqueue(block.index);
+            block.EnableDetector(true);
+        }
 
         StartCoroutine(this.board.PrepareForMatch(matchSeq));  
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(match);
+        sensor.AddObservation(ghost.transform.localPosition.z);
         sensor.AddObservation(board.GetCurrentLevel());
         
         sensor.AddObservation(board.numberOfMonsters);
         sensor.AddObservation(board.numberOfBlocks); 
 
-        sensor.AddObservation(actionCommand);
-        sensor.AddObservation(m_MoveLeft);
-        sensor.AddObservation(m_MoveRight);
-        sensor.AddObservation(m_Rotate);
-        sensor.AddObservation(m_MoveDown);
-
+        sensor.AddObservation(rotationIndex);
+        sensor.AddOneHotObservation((int)trapData.shape, 7); // 7 represents the size of trap type enum
         if (trapBlocks != null)
         {
-            for (int i = 0; i < trapBlocks.Length; i++) // make it dynamic
+            for (int i = 0; i < trapBlocks.Length; i++) 
             {
                 if (trapBlocks[i])
-                    m_AgentBuffer.AppendObservation(GetTrapBlockData(i));
+                    m_TrapBuffer.AppendObservation(GetTrapBlockData(i));
             }  
         }
+
+        if (matches != null)
+        {
+            foreach (var match in matches)
+            {
+                float[] a = new float[1];
+                a[0] = match;
+                m_MatchBuffer.AppendObservation(a);
+            }
+        }
+        sensor.AddObservation(numberOfMatches);
+        sensor.AddObservation(ghost.HasAMatch(this.matches));
+        
+        sensor.AddObservation(this.transform.localPosition.z - ghost.transform.localPosition.z); // when it will be placed
+
+        //sensor.AddObservation(this.transform.position - goal.transform.position);
     }
 
     public float[] GetTrapBlockData(int i)
     {
-        var blockData = new float[4];
-        blockData[0] = this.transform.localPosition.x + trapBlocks[i].transform.localPosition.x;
-        blockData[1] = ghost.transform.localPosition.x + trapBlocks[i].transform.localPosition.x;
-        blockData[2] = this.transform.localPosition.z + trapBlocks[i].transform.localPosition.z;
-        blockData[3] = ghost.transform.localPosition.z + trapBlocks[i].transform.localPosition.z;
+        var blockData = new float[3];
+        blockData[0] = trapBlocks[i].colour;
+        blockData[1] = this.transform.localPosition.x + route[i].x;
+        blockData[2] = this.transform.localPosition.z + route[i].z;
+
         return blockData;
+    }
+
+    private int m_AgentStepCount; // current agent step
+    private void FixedUpdate()
+    {
+        if (StepCount % 5 == 0)
+        {
+            m_IsDecisionStep = true;
+            m_AgentStepCount++;
+        }
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -208,44 +252,42 @@ public class PieceAgent : Agent
         var continuousActions = actionBuffers.ContinuousActions;
         var discreteActions = actionBuffers.DiscreteActions;
 
-        m_MoveLeft = (int)discreteActions[0] > 0;
-        m_MoveRight = (int)discreteActions[1] > 0;
-        m_Rotate = (int)discreteActions[2] > 0;
-        m_MoveDown = (int)discreteActions[3] > 0;
+        m_Move = (int)discreteActions[0];
+        m_Rotate = (int)discreteActions[1];
+        m_MoveDown = (int)discreteActions[2] > 0;
 
-        if (actionCommand && actionEnabled)
+        if (m_IsDecisionStep && actionEnabled)
         {
-            if (m_MoveLeft)
+            m_IsDecisionStep = false;
+            if (m_Move == 1)
             {
                 Move(Vector3Int.left);
                 ghost.UpdatePos();
             }
-            if (m_MoveRight)
+            else if (m_Move == 2)
             {
                 Move(Vector3Int.right);
                 ghost.UpdatePos();
             }
+            // else no any movement
 
-            if (m_Rotate)
+            if (m_Rotate == 1)
             {
-                Rotate();
+                Rotate(1);
                 ghost.UpdatePos();
             }
-
-            StartCoroutine(CoolDown(0.1f));
+            else if (m_Rotate == 2)
+            {
+                Rotate(-1);
+                ghost.UpdatePos();
+            }
+            // else no any rotation
         }
 
         if (m_MoveDown && EnableMoveDown)
         {
             Move(-Vector3Int.forward);
         }
-    }
-
-    private IEnumerator CoolDown(float coolDownTime)
-    {
-        actionCommand = false;
-        yield return new WaitForSeconds(coolDownTime);
-        actionCommand = true;
     }
 
     public Vector3Int FindBottom()
@@ -278,7 +320,7 @@ public class PieceAgent : Agent
         
     }
 
-    private void Rotate()
+    private void Rotate(int direction)
     {
         int originalRotationIndex = this.rotationIndex;
         this.rotationIndex = Wrap(this.rotationIndex + 1, 0, 4);
@@ -295,19 +337,19 @@ public class PieceAgent : Agent
                 case TrapShape.O:
                     cell.x -= 0.5f;
                     cell.z -= 0.5f;
-                    x = Mathf.CeilToInt(cell.x * TrapData.cos_90  + cell.z * TrapData.sin_90);
-                    z = Mathf.CeilToInt(cell.x * -TrapData.sin_90 + cell.z * TrapData.cos_90);
+                    x = Mathf.CeilToInt(cell.x * TrapData.cos_90 + cell.z * TrapData.sin_90 * direction);
+                    z = Mathf.CeilToInt(cell.x * -TrapData.sin_90 * direction + cell.z * TrapData.cos_90);
                     break;
                 default:
-                    x = Mathf.RoundToInt(cell.x * TrapData.cos_90  + cell.z * TrapData.sin_90);
-                    z = Mathf.RoundToInt(cell.x * -TrapData.sin_90 + cell.z * TrapData.cos_90);
+                    x = Mathf.RoundToInt(cell.x * TrapData.cos_90 + cell.z * TrapData.sin_90 * direction);
+                    z = Mathf.RoundToInt(cell.x * -TrapData.sin_90 * direction + cell.z * TrapData.cos_90);
                     break;
             }
 
             newRoute[i] = new Vector3Int(x, 0, z);
         }
 
-        if (!TestWallKicks(this.rotationIndex, newRoute)) // check rotate valid
+        if (!TestWallKicks(this.rotationIndex, direction, newRoute)) // check rotate valid
         {
             this.rotationIndex = originalRotationIndex;
         }
@@ -328,9 +370,11 @@ public class PieceAgent : Agent
         Place();
     }
 
-    private bool TestWallKicks(int rotationIndex, Vector3Int[] newRoute)
+    private bool TestWallKicks(int rotationIndex, int rotationDirection, Vector3Int[] newRoute)
     {
         int wallKickIndex = rotationIndex * 2;
+        if (rotationDirection < 0)
+            wallKickIndex--;
         wallKickIndex = Wrap(wallKickIndex, 0, this.trapData.wallKicks.GetLength(0));
 
         for (int i = 0; i < this.trapData.wallKicks.GetLength(1); i++)
@@ -347,16 +391,6 @@ public class PieceAgent : Agent
         return false;
     }
 
-    public int DistanceToGhost()
-    {
-        return (int)Vector3.Distance(this.transform.position, ghost.transform.position);
-    }
-
-    public bool CloseToGhost()
-    {
-        return DistanceToGhost() <= 2;
-    }
-
     private int Wrap(int input, int min, int max)
     {
         if (input < min)
@@ -368,10 +402,22 @@ public class PieceAgent : Agent
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var discreteActionsOut = actionsOut.DiscreteActions;
-        discreteActionsOut[0] = input.MoveLeft() ? 1 : 0;
-        discreteActionsOut[1] = input.MoveRight() ? 1 : 0;
-        discreteActionsOut[2] = input.Rotate() ? 1 : 0;
-        discreteActionsOut[3] = input.MoveDown() ? 1 : 0;
+
+        if (input.MoveLeft())
+            discreteActionsOut[0] = 1;
+        else if (input.MoveRight())
+            discreteActionsOut[0] = 2;
+        else 
+            discreteActionsOut[0] = 0;
+
+        if (input.RotateAnticlockwise())
+            discreteActionsOut[1] = 1;
+        else if (input.RotateClockwise())
+            discreteActionsOut[1] = 2;
+        else 
+            discreteActionsOut[1] = 0;
+        
+        discreteActionsOut[2] = input.MoveDown() ? 1 : 0;
     }
 
 }

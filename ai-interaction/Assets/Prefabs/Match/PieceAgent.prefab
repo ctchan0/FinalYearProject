@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 9182513642221203002}
   - component: {fileID: 109760067}
   - component: {fileID: 1020306572}
+  - component: {fileID: 1987195277}
   m_Layer: 0
   m_Name: PieceAgent
   m_TagString: Untagged
@@ -70,18 +71,19 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  EnableMoveDown: 0
+  m_TrapBuffer: {fileID: 0}
+  m_MatchBuffer: {fileID: 0}
   board: {fileID: 0}
-  spawnPosition: {x: 0, y: 0, z: 8}
-  dropSpeed: 1
   trapBlockPrefab:
   - {fileID: 8080221884633480102, guid: df063e6e1a9c03b4e994f8775d322ed3, type: 3}
   - {fileID: 1590316642479508818, guid: 183a3c0ba724b0f479851812e7917891, type: 3}
   - {fileID: 3740226163296320016, guid: 9d686838cabe9c84194f994d01332e6f, type: 3}
   trapBlocks: []
   ghost: {fileID: 0}
-  EnableMoveDown: 1
-  m_AgentBuffer: {fileID: 0}
-  DefaultSpawningRange: 5
+  spawnPosition: {x: 0, y: 0, z: 8}
+  dropSpeed: 0.5
+  DefaultSpawningRange: 2
 --- !u!114 &1607194804869069436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -95,17 +97,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 9
-    NumStackedVectorObservations: 2
+    VectorObservationSize: 15
+    NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 02000000020000000200000002000000
-    VectorActionSize: 02000000020000000200000002000000
+      BranchSizes: 030000000300000002000000
+    VectorActionSize: 030000000300000002000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
-  m_InferenceDevice: 3
+  m_InferenceDevice: 2
   m_BehaviorType: 0
   m_BehaviorName: Piece
   TeamId: 0
@@ -192,6 +194,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SensorName: BufferSensor
-  m_ObservableSize: 4
+  m_SensorName: BufferSensorTrap
+  m_ObservableSize: 3
   m_MaxNumObservables: 4
+--- !u!114 &1987195277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3176532770943899201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: BufferSensorMatch
+  m_ObservableSize: 1
+  m_MaxNumObservables: 10
