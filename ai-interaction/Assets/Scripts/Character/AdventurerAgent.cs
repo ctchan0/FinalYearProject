@@ -27,7 +27,7 @@ public class AdventurerAgent : Agent
     private Rigidbody rb;
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
-    public float worth = 0.3f; // life value in game 
+    public float worth = 0.3f; // life value [0, 1] in game 
 
     public int maxHealth = 3;
     public int currentHealth { get; set;}
@@ -51,10 +51,14 @@ public class AdventurerAgent : Agent
     public GameObject arrowPrefab;
     GameObject currentArrow;
     
+    private bool m_IsDecisionStep;
     bool m_Attack = true;
 
     int ItemId;
-    bool m_Use = true;
+    // bool m_Use = true;
+
+
+    public BufferSensorComponent m_Buffer;
 
     public override void Initialize()
     {
@@ -68,6 +72,8 @@ public class AdventurerAgent : Agent
             print(this.gameObject + ": Missing health bar");
 
         m_InventoryController = GetComponent<InventoryController>();
+
+        m_Buffer = GetComponent<BufferSensorComponent>();
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
 
@@ -125,44 +131,16 @@ public class AdventurerAgent : Agent
         m_HealthBar.SetMaxHealth(maxHealth);
     }
 
-    #endregion
-
-    #region Health
-
-    public void GetDamage(int damage)
+    private int m_AgentStepCount; //current agent step
+    void FixedUpdate()
     {
-        currentHealth -= damage;
-        m_HealthBar.SetHealth(currentHealth);
-        if (currentHealth <= 0)
+        if (StepCount % 5 == 0)
         {
-            isDead = true; // always come first 
-            
-            m_InventoryController.Clear();
-            m_EnvController.Eliminate(this.gameObject);
-            AddReward(-worth);
-
-            m_EnvController.AddGroupReward(0, -1f / m_EnvController.AdventurersList.Count);
-        }
-        else
-        {
-            AddReward(-1f / this.maxHealth);
+            m_IsDecisionStep = true;
+            m_AgentStepCount++;
         }
     }
-
-    public void GetCure(int healAmount)
-    {
-        int prvHealth = currentHealth;
-
-        currentHealth += healAmount;
-        if (currentHealth > maxHealth)
-            currentHealth = maxHealth;
-
-        if (currentHealth != prvHealth)
-            AddReward((currentHealth - prvHealth) / maxHealth); // add rewards depend the amount of healing
-
-        m_HealthBar.SetHealth(currentHealth);
-    }
-
+    
     #endregion
 
     #region Action
@@ -171,17 +149,18 @@ public class AdventurerAgent : Agent
         var continuousActions = actionBuffers.ContinuousActions;
 
         // movement
-        var forward = Mathf.Clamp(continuousActions[0], -0.5f, 1f);
+        var forward = Mathf.Clamp(continuousActions[0], -1f, 1f);
         var right = Mathf.Clamp(continuousActions[1], -1f, 1f);
         var rotate = Mathf.Clamp(continuousActions[2], -1f, 1f);
 
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
-        dirToGo = transform.worldToLocalMatrix.MultiplyVector(transform.forward) * forward;
-        dirToGo += transform.worldToLocalMatrix.MultiplyVector(transform.right) * right;
+        // transform.forward & transform.right are relative to world space
+        // while dirToGo.z and dirToGo.x are relative to local space
+        dirToGo = new Vector3(right, 0, forward); 
         rotateDir = transform.up * rotate;
-
-        transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
+        
+        transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime); // relative to local space
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
     }
 
@@ -208,25 +187,12 @@ public class AdventurerAgent : Agent
         if (itemIndex == 0) return; // 0 respresents doing nothing
         else itemIndex--; // else get the corresponding item index
 
-        if (m_Use && m_InventoryController.CanUseItem(itemIndex))
-        {
-            // AddReward(0.2f);
-            ItemId = m_InventoryController.GetItemAt(itemIndex).item.ID;
-            StartCoroutine(UseItem(itemIndex, 1f)); 
-        }
-    }
-
-    private IEnumerator UseItem(int itemIndex, float coolDownTime)
-    {
-        m_Use = false;
-        m_InventoryController.PerformItemAction(itemIndex); 
-        yield return new WaitForSeconds(coolDownTime);
-        m_Use = true;
+        if (m_InventoryController.IsItemAvailable(itemIndex))
+            m_InventoryController.PerformItemAction(itemIndex); 
     }
 
     private IEnumerator Attack(float coolDownTime)
     {
-        AddReward(0.2f/ m_EnvController.MaxEnvironmentSteps);
         m_Attack = false;
         if (m_Class == Class.Barbarian)
         {
@@ -252,10 +218,7 @@ public class AdventurerAgent : Agent
                     // heal
                     var target = hitObject.GetComponent<AdventurerAgent>();
                     target.GetCure(2);
-                    if (target.maxHealth >= 2)
-                        AddReward(2f / target.maxHealth); // assure reward within range <= 1f
-                    else 
-                        AddReward(1f);
+                    HitTarget(1 / target.maxHealth);
                 }
                 else if (hitObject.CompareTag("Monster"))
                 {
@@ -309,17 +272,57 @@ public class AdventurerAgent : Agent
 
     #endregion
 
-    #region Reward
+    #region Rewards
+
+    public void HitTarget(float point)
+    {
+        AddReward(point);
+    }
+
+    public void GetDamage(int damage)
+    {
+        currentHealth -= damage;
+        m_HealthBar.SetHealth(currentHealth);
+        if (currentHealth <= 0)
+        {
+            isDead = true; // always come first 
+            
+            m_InventoryController.Clear();
+            m_EnvController.Eliminate(this.gameObject);
+            AddReward(-worth);
+
+            m_EnvController.AddGroupReward(0, -1f / m_EnvController.AdventurersList.Count);
+        }
+        else
+        {
+            AddReward(-1f / this.maxHealth);
+        }
+    }
+
+    public void GetCure(int healAmount)
+    {
+        int prvHealth = currentHealth;
+
+        currentHealth += healAmount;
+        if (currentHealth > maxHealth)
+            currentHealth = maxHealth;
+
+        if (currentHealth != prvHealth)
+            AddReward((float)(currentHealth - prvHealth) / maxHealth); // add rewards depend the amount of healing
+
+        m_HealthBar.SetHealth(currentHealth);
+    }
+
     public void DealDamage(MonsterAgent target, int damage)
     {
         if (damage > target.maxHealth)
             damage = target.maxHealth;
         target.GetDamage(damage);
-        AddReward(damage / target.maxHealth);
+        AddReward((float)damage / target.maxHealth);
 
         if (target.isDead)
         {
-            AddReward(0.3f); // price of a monster
+            // AddReward(0.3f); // price of a monster
             AddReward(1f / m_EnvController.MonstersList.Count); // bonus price
         }
     }
@@ -364,42 +367,86 @@ public class AdventurerAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(m_Attack);
+        sensor.AddObservation(m_Attack); // frequency of attack
 
-        sensor.AddObservation(this.currentHealth);
+        sensor.AddObservation((float)this.currentHealth / this.maxHealth);
 
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
 
-        sensor.AddObservation(m_Use);
-        sensor.AddObservation(ItemId);
+        sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.forward));
+        sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.right));
 
+        // float[] inventorySlot = new float[3];
+        // inventorySlot[0] = m_InventoryController.IsItemAvailable(0) ? 1f : 0f;
+        // inventorySlot[1] = m_InventoryController.IsItemAvailable(1) ? 1f : 0f;
+        // inventorySlot[2] = m_InventoryController.IsItemAvailable(2) ? 1f : 0f;
+        // sensor.AddObservation(inventorySlot);
+
+        // Add team buffer, and the goal
+        List<EnvController.AdventurerInfo> teamList;
+        teamList = m_EnvController.AdventurersList;
+        List<EnvController.MonsterInfo> opponentList;
+        opponentList = m_EnvController.MonstersList;
+
+        /* Team Info */ 
+        foreach (var info in teamList)
+        {
+            if (info.Adventurer != this && info.Adventurer.gameObject.activeInHierarchy)
+            {
+                m_Buffer.AppendObservation(GetAllyData(info));
+            }
+        }
+
+        /* Opponent Info */
+        foreach (var info in opponentList)
+        {
+            if (info.Monster.gameObject.activeInHierarchy)
+            {
+                
+                m_Buffer.AppendObservation(GetOpponentData(info));
+            }
+        }
+
+        /*
         switch (m_Class)
         {
             case Class.Barbarian:
                 sensor.AddObservation(axe.transform.localRotation.z); 
                 break;
 
-            case Class.Mage:
-                foreach (var item in m_EnvController.AdventurersList)
-                {
-                    if (item.Adventurer != this)
-                        sensor.AddObservation(item.Adventurer.maxHealth - item.Adventurer.currentHealth); // possible heal amount
-                }
-                break;
-
             case Class.Knight:
                 sensor.AddObservation(sword.transform.localPosition.z); 
-                break;
-
-            case Class.Rogue:
-                break;
+                break;      
 
             default:
-                Debug.Log(this.gameObject + " has unknown class ");
                 break;
-        }
+        } */
+    }
+
+    private float[] GetAllyData(EnvController.AdventurerInfo info)
+    {
+        var data = new float[3];
+
+        data[0] = 0f; // 0: Adventurer, 1: Monster 
+        data[1] = Vector3.Dot(transform.forward, 
+                            info.Adventurer.gameObject.transform.position 
+                            - this.transform.position); // the direction of the teammates
+        data[2] = (float)info.Adventurer.currentHealth / info.Adventurer.maxHealth;
+        return data;
+    }
+
+    private float[] GetOpponentData(EnvController.MonsterInfo info)
+    {
+        var data = new float[3];
+
+        data[0] = 1f; // 0: Adventurer, 1: Monster 
+        data[1] = Vector3.Dot(transform.forward, 
+                            info.Monster.gameObject.transform.position 
+                            - this.transform.position); // the direction of the teammates
+        data[2] = (float)info.Monster.currentHealth / info.Monster.maxHealth;
+        return data;
     }
 
     /// <summary>
@@ -409,8 +456,12 @@ public class AdventurerAgent : Agent
     {
         // Move the agent using the action.
         MoveAgent(actionBuffers);
-        UseBasicAttack(actionBuffers);
-        UseItem(actionBuffers);
+        if (m_IsDecisionStep)
+        {
+            m_IsDecisionStep = false;
+            UseBasicAttack(actionBuffers);
+            UseItem(actionBuffers);
+        }
         
         StayAlive();
     }

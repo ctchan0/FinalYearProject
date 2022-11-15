@@ -7,15 +7,21 @@ public class Ghost : MonoBehaviour
 {
     public Block ghostBlockPrefab;
     public Block[] ghostBlocks;
+
     private PieceAgent piece;
-    private Board board;
-    private Block[] blocks;
-    private int prevMatch = 0;
-    private int prevPosition = 0;
+
+    // private int prevMatch = 0;
+    // private float prevPosition = 0;
+    // public bool hasMatch { get; set;}
+    // public bool prevHasMatch { get; set;}
+    // public int numberOfRightMatches { get; set; }
+    // public bool hasRightMatch { get; set; }
+    // public int numberOfLeftMatches { get; set; }
+    // public bool hasLeftMatch { get; set; }
 
     private void Awake()
     {
-        board = FindObjectOfType<Board>();
+        
     }
 
     public void Initialize(PieceAgent piece)
@@ -24,90 +30,81 @@ public class Ghost : MonoBehaviour
 
         this.transform.position = piece.transform.position;
 
+        // Instantiate the ghost
         ghostBlocks = new Block[piece.trapData.route.Length];
-        for (int i = 0; i < piece.route.Length; i++) // Instantiate the ghost
+        for (int i = 0; i < piece.route.Length; i++) 
         {
             Vector3 newPos = piece.route[i] + this.transform.position;
             Block block = Instantiate(ghostBlockPrefab, newPos, Quaternion.identity);
-            block.colour = piece.trapBlocks[i].GetComponent<Block>().colour;
+            block.colour = piece.trapBlocks[i].GetComponent<Block>().colour; // assign the colour
             ghostBlocks[i] = block;
             block.transform.SetParent(this.transform);
         }
 
-        this.prevMatch = 0;
-        this.prevPosition = board.boardDepth;
-        // this.hasAMatch = false;
+        // this.prevMatch = 0;
+        // this.prevPosition = piece.board.boardDepth;
+        // this.hasMatch = false;
+        // this.prevHasMatch = false;
+        // this.numberOfLeftMatches = 0; 
+        // this.numberOfRightMatches = 0;
 
         UpdatePos();
     }
 
-    public void UpdatePos() // always update position and check optimal !!!!!!!!
+    public void UpdatePos() // always update position and inspect surroundings
     {
-        if (piece == null || board.gameOver) return;
+        if (piece == null || piece.board.gameOver) return;
         
-        Vector3Int pos = piece.FindBottom();
-        this.transform.position = pos;
-        if (this.transform.localPosition.z < this.prevPosition)
-        {
-            piece.AddReward(0.2f);
-            // print("This is a better position!");
-        }
-        else if (this.transform.localPosition.z > this.prevPosition)
-        {
-            piece.AddReward(-0.2f);
-        }
-        else 
-        {
-            piece.AddReward(0.1f);
-        }
-        this.prevPosition = (int)this.transform.localPosition.z;
 
-        piece.matches = GetMatches();
-        piece.numberOfMatches = GetNumberOfMatch(piece.matches);
-        if (HasAMatch(piece.matches))
-            piece.AddReward(0.2f);
+        Vector3Int centerPos = piece.FindBottomFrom((int)piece.transform.localPosition.x, piece.route);
+        this.transform.localPosition = centerPos;
+        // Vector3Int rightPos = piece.FindBottomFrom(1);
+        // Vector3Int leftPos = piece.FindBottomFrom(-1);
+        // Debug.Log("Center position: " + centerPos.z); (ticked)
+        // Debug.Log("Right position: " + rightPos.z); (ticked)
+        // Debug.Log("Left position: " + leftPos.z); (ticked)
+    
+        // piece.AddReward((this.prevPosition - this.transform.localPosition.z) / piece.board.boardDepth);
+        // this.prevPosition = this.transform.localPosition.z;
+
+
+        // piece.matches = GetMatchesAt(centerPos, piece.route);
+        // piece.matches.RemoveAt(piece.matches.Count - 1);
+        // piece.numberOfMatches = GetNumberOfMatch(piece.matches);
+        // var rigthMatches = GetMatchesAt(rightPos);
+        // numberOfRightMatches = GetNumberOfMatch(rigthMatches);
+        // hasRightMatch = HasAMatch(rigthMatches);
+        // var leftMatches = GetMatchesAt(leftPos);
+        // numberOfLeftMatches = GetNumberOfMatch(leftMatches);
+        // hasLeftMatch = HasAMatch(leftMatches);
+        // Debug.Log("Center match: " + piece.numberOfMatches); (ticked)
+        // Debug.Log("Rigth match: " + numberOfRightMatches); (ticked)
+        // Debug.Log("Left match: " + numberOfLeftMatches); (ticked)
+        
         //print("MatchList:");
         //foreach (var match in piece.matches)
         //{
-        //    Debug.Log(match);
+        //   Debug.Log(match);
         //}
-        if (piece.numberOfMatches > this.prevMatch)
-        {
-            piece.AddReward(0.2f);
-            // print("Here is a better match!");
-        }
-        else if (piece.numberOfMatches < this.prevMatch)
-        {
-            piece.AddReward(-0.2f);
-        }
-        else
-        {
-            piece.AddReward(0.1f);
-        }
-        this.prevMatch = piece.numberOfMatches;
+        // prevHasMatch = hasMatch;
+        // if (HasAMatch(piece.matches))
+        //{
+        //    hasMatch = true;
+        //}
+        //else
+        //{
+        //    if (prevHasMatch == true) // if has match before, but not notice -> heavy penalty
+        //    {
+                // piece.AddReward(-1f);
+                // print("High penalty");
+        //    } 
+        //    hasMatch = false;
+        //}
 
-    }
-
-    public int GetNumberOfMatch(List<int> matches)
-    {
-        if (matches == null) return 0;
-        int n = 0;
-        foreach (var match in matches)
-        {
-            n += match;
-        }
-        return n;
-    }
-
-    public bool HasAMatch(List<int> matches)
-    {
-        if (matches == null) return false;
-        foreach (var match in matches)
-        {
-            if (match >= 5)
-                return true;
-        }
-        return false;
+        // float boardSize = piece.board.boardDepth * piece.board.boardWidth;
+        // piece.AddReward((piece.numberOfMatches - this.prevMatch) / boardSize);
+        
+        // this.prevMatch = piece.numberOfMatches;
     }
 
     public void Reset()
@@ -121,96 +118,6 @@ public class Ghost : MonoBehaviour
             ghostBlocks = null;
         }
         piece = null;
-        blocks = null;
     }
-
-    public List<int> GetMatches()
-    {
-        blocks = board.GetBlocksList();
-        if (blocks == null) return null;
-
-        var matchSeq = new Queue<int>();
-
-        for (int i = 0; i < ghostBlocks.Length; i++) 
-        {
-            Vector3Int blockPos = Vector3Int.FloorToInt(this.transform.localPosition) + piece.route[i];
-            int index = board.GetBlockIndexAt(blockPos.z, blockPos.x);
-            blocks[index] = ghostBlocks[i];
-            ghostBlocks[i].index = index;
-            matchSeq.Enqueue(index);
-        } 
-        return MatchTest(matchSeq);
-    }
-
-    public List<int> MatchTest(Queue<int> matchSeq, List<int> matches = null)
-    {
-        if (matches == null)
-            matches = new List<int>();
-
-        if (matchSeq.Count == 0) 
-            return matches;
-
-        if (blocks == null) return null;
-
-        var nextMatchSeq = new Queue<int>();
-        var matchedBlocks = new List<int>();
-        while (matchSeq.Count > 0)
-        {
-            int index = matchSeq.Dequeue();
-            int col = index % board.boardWidth;
-            int row = index / board.boardWidth;
-            if (blocks[index] == null) continue;
-
-            int colour = blocks[index].colour;
-            List<int> match = board.BFS(blocks, row, col, colour); // a list of blocks that match
-            // skip the block that has checked for a match already
-            matchSeq = new Queue<int>(matchSeq.Where(x => !match.Contains(x)));
-
-            if (match.Count >= 2)
-                matches.Add(match.Count);
-
-            if (match.Count >= 5)
-            {
-                // hasAMatch = true;
-                foreach (var blockIndex in match)
-                {
-                    blocks[blockIndex] = null;
-                    matchedBlocks.Add(blockIndex);
-                }
-            }
-        }
-        foreach (var blockIndex in matchedBlocks)
-        {  
-            Drop(blockIndex + board.boardWidth, ref nextMatchSeq);
-        }
-
-        return MatchTest(nextMatchSeq, matches);
-    }
-
-    private void Drop(int index, ref Queue<int> dropBlocks)
-    {
-        while (index < blocks.Length && blocks[index] != null) // for each block
-        {
-            int startIndex = index;
-            int x = index % board.boardWidth;   // make a copy to calculate new index
-            int y = index / board.boardWidth;
-            while (y - 1 >= 0 && blocks[board.GetBlockIndexAt(y-1, x)] == null) 
-            {
-                y--;
-            }
-            int endIndex = board.GetBlockIndexAt(y, x);
-            if (startIndex != endIndex)
-            {
-                var block = blocks[startIndex];
-                blocks[startIndex] = null;
-                blocks[endIndex] = block;
-            }
-            
-            dropBlocks.Enqueue(endIndex);
-
-            index += board.boardWidth; // check the next upper block
-        }
-    }
-
 
 }

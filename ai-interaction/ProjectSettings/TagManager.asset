@@ -19,6 +19,9 @@ TagManager:
   - BlueMonster
   - RedMonster
   - YellowMonster
+  - Wall
+  - Ghost
+  - Goal
   layers:
   - Default
   - TransparentFX

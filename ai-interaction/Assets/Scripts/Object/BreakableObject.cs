@@ -14,7 +14,7 @@ public class BreakableObject : MonoBehaviour
     [SerializeField] MeshFilter currentMesh; 
     private Mesh defaultMesh;
     [SerializeField] Mesh[] afterHit;
-    [SerializeField] GameObject resource;
+    [SerializeField] GameObject[] resources;
 
     void Awake()
     {
@@ -60,10 +60,11 @@ public class BreakableObject : MonoBehaviour
             // able to get a resource
             adventurer.DiscoverResources();
             this.gameObject.SetActive(false);
-            if (resource)
+            if (resources != null && resources.Length != 0)
             {
-                var item = Instantiate(resource, 
-                            transform.position + resource.transform.position, 
+                int n = Random.Range(0, resources.Length);
+                var item = Instantiate(resources[n], 
+                            transform.position + resources[n].transform.position, 
                             Quaternion.identity);
                 item.transform.SetParent(m_EnvController.transform);
             }

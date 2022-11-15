@@ -255,7 +255,7 @@ public class InventoryController : MonoBehaviour
         return inventoryItemsList[itemIndex];
     }
 
-    public bool CanUseItem(int itemIndex)
+    public bool IsItemAvailable(int itemIndex)
     {
         InventoryItem inventoryItem = GetItemAt(itemIndex);
         if (inventoryItem.IsEmpty) return false;

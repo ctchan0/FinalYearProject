@@ -117,4 +117,7 @@ MonoBehaviour:
   afterHit:
   - {fileID: -4204025313595810674, guid: 7452983e04c975b409009814add80ba5, type: 3}
   - {fileID: 7557174462171858654, guid: f5fed301a118558428a4c3c12fc18a21, type: 3}
-  resource: {fileID: 5717137646866879777, guid: 7bedf419979459046a04b681d5c37b46, type: 3}
+  resources:
+  - {fileID: 4872853229255339504, guid: 8d4bf4b208d4a284a9049aa0baea499b, type: 3}
+  - {fileID: 8993992374811332366, guid: fac2592cdea8d9f47b2c91b282adffdd, type: 3}
+  - {fileID: 5462934752072674376, guid: 915ba58b419ea864aba5faca01542890, type: 3}

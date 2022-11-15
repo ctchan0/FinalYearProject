@@ -72,6 +72,17 @@ public class EnvController : MonoBehaviour
     public GridLayout m_GridLayout;
     private Grid grid;
 
+    public List<PushBlock> PushedBlocklists = new List<PushBlock>();
+    public void AddPushedBlock(PushBlock block)
+    {
+        PushedBlocklists.Add(block);
+        m_AdventurerGroup.AddGroupReward(0.25f);
+        if (PushedBlocklists.Count == 4)
+        {
+            GatherAllResources();
+            // Reset and then give to the piece agent
+        }
+    }
     public List<InventoryItem> ItemCollectionList = new List<InventoryItem>(); // adventurers need to fulfil the list reuirement to win
     public List<InventoryItem> ItemInitiatorList = new List<InventoryItem>(); // items provided at the start
 
@@ -267,7 +278,8 @@ public class EnvController : MonoBehaviour
             }
         }
 
-        StartCoroutine(CheckAllResourcesGathered(1f));
+        PushedBlocklists = new List<PushBlock>();
+        // StartCoroutine(CheckAllResourcesGathered(1f));
     }
 
     /// <summary>

@@ -6,6 +6,8 @@ public class TrapData : MonoBehaviour
 {
     public static readonly float cos_90 = Mathf.Cos(Mathf.PI / 2f); 
     public static readonly float sin_90 = Mathf.Sin(Mathf.PI / 2f);
+    public static readonly float cos_180 = Mathf.Cos(Mathf.PI);
+    public static readonly float sin_180 = Mathf.Sin(Mathf.PI);
     public static readonly float[] RotationMatrix = new float[] { cos_90, sin_90, -sin_90, cos_90 };
 
     public static readonly Dictionary<TrapShape, Vector2Int[]> Route = new Dictionary<TrapShape, Vector2Int[]>()

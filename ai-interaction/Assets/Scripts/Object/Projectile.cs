@@ -26,7 +26,7 @@ public class Projectile : MonoBehaviour
         if (other.gameObject.CompareTag("Monster"))
         {
             var monster = other.gameObject.GetComponent<MonsterAgent>();
-            belonger.AddReward(0.5f);
+            belonger.HitTarget(0.5f);
             belonger.DealDamage(monster, 1);
         }
         if (shoot)

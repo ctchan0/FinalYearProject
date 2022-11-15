@@ -13,10 +13,7 @@ GameObject:
   - component: {fileID: 3176532770943899206}
   - component: {fileID: 1607194804869069436}
   - component: {fileID: 1238304422450897780}
-  - component: {fileID: 9182513642221203002}
-  - component: {fileID: 109760067}
-  - component: {fileID: 1020306572}
-  - component: {fileID: 1987195277}
+  - component: {fileID: 587089949}
   m_Layer: 0
   m_Name: PieceAgent
   m_TagString: Untagged
@@ -72,18 +69,18 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   EnableMoveDown: 0
-  m_TrapBuffer: {fileID: 0}
-  m_MatchBuffer: {fileID: 0}
   board: {fileID: 0}
+  rotationIndex: 0
   trapBlockPrefab:
   - {fileID: 8080221884633480102, guid: df063e6e1a9c03b4e994f8775d322ed3, type: 3}
   - {fileID: 1590316642479508818, guid: 183a3c0ba724b0f479851812e7917891, type: 3}
   - {fileID: 3740226163296320016, guid: 9d686838cabe9c84194f994d01332e6f, type: 3}
   trapBlocks: []
   ghost: {fileID: 0}
-  spawnPosition: {x: 0, y: 0, z: 8}
+  spawnPosition: {x: 5, y: 0, z: 17}
   dropSpeed: 0.5
   DefaultSpawningRange: 2
+  Turn: 0
 --- !u!114 &1607194804869069436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -97,12 +94,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 15
+    VectorObservationSize: 247
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 030000000300000002000000
-    VectorActionSize: 030000000300000002000000
+      BranchSizes: 28000000
+    VectorActionSize: 28000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
@@ -128,87 +125,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DisableInput: 0
---- !u!114 &9182513642221203002
+--- !u!114 &587089949
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3176532770943899201}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 5
-  TakeActionsBetweenDecisions: 1
---- !u!114 &109760067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3176532770943899201}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a501962d056745d1a30e99146ee39fe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SensorName: GridSensor
-  m_CellScale: {x: 1, y: 0.01, z: 1}
-  m_GridSize: {x: 40, y: 1, z: 40}
-  m_RotateWithAgent: 0
-  m_AgentGameObject: {fileID: 0}
-  m_DetectableTags:
-  - Blue
-  - Red
-  - Yellow
-  - BlueMonster
-  - RedMonster
-  - YellowMonster
-  m_ColliderMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_MaxColliderBufferSize: 500
-  m_InitialColliderBufferSize: 4
-  m_DebugColors:
-  - {r: 0.12756611, g: 0.18967144, b: 0.4716981, a: 0}
-  - {r: 0.5, g: 0.11635217, b: 0.123373315, a: 0}
-  - {r: 0.5377358, g: 0.4490218, b: 0.17586325, a: 0}
-  - {r: 0.12941177, g: 0.18823531, b: 0.47058827, a: 0}
-  - {r: 0.5019608, g: 0.11764707, b: 0.121568635, a: 0}
-  - {r: 0.5377358, g: 0.4490218, b: 0.17586325, a: 0}
-  m_GizmoYOffset: 0
-  m_ShowGizmos: 0
-  m_CompressionType: 1
-  m_ObservationStacks: 1
---- !u!114 &1020306572
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3176532770943899201}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SensorName: BufferSensorTrap
-  m_ObservableSize: 3
-  m_MaxNumObservables: 4
---- !u!114 &1987195277
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3176532770943899201}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SensorName: BufferSensorMatch
-  m_ObservableSize: 1
-  m_MaxNumObservables: 10
+  Record: 0
+  NumStepsToRecord: 0
+  DemonstrationName: PieceDemo
+  DemonstrationDirectory: 
