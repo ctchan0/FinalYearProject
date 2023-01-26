@@ -72,15 +72,18 @@ public class EnvController : MonoBehaviour
     public GridLayout m_GridLayout;
     private Grid grid;
 
-    public List<PushBlock> PushedBlocklists = new List<PushBlock>();
+    public List<int> colorLists = new List<int>();
+    public PieceAgent activePiece;
     public void AddPushedBlock(PushBlock block)
     {
-        PushedBlocklists.Add(block);
+        colorLists.Add(block.color);
         m_AdventurerGroup.AddGroupReward(0.25f);
-        if (PushedBlocklists.Count == 4)
+        if (colorLists.Count == 4)
         {
             GatherAllResources();
+            Debug.Log("A Trap is available for initialization");
             // Reset and then give to the piece agent
+            activePiece.StartNewTurn(colorLists); 
         }
     }
     public List<InventoryItem> ItemCollectionList = new List<InventoryItem>(); // adventurers need to fulfil the list reuirement to win
@@ -93,6 +96,7 @@ public class EnvController : MonoBehaviour
     public int m_NumberOfRemainingAdventurers { get; set; }
     public int m_NumberOfRemainingMonsters { get; set; }
     public int m_NumberOfRemainingResources { get; set; }
+    public GameObject resource; // to gather all resources together
     private SimpleMultiAgentGroup m_AdventurerGroup;
     private SimpleMultiAgentGroup m_MonsterGroup;
     void Start()
@@ -201,7 +205,7 @@ public class EnvController : MonoBehaviour
         return Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0);
     }
 
-    private IEnumerator ResetScene()
+    private IEnumerator ResetScene() 
     {
         yield return new WaitForSeconds(0.5f); // give more time to prepare new scene
 
@@ -278,7 +282,7 @@ public class EnvController : MonoBehaviour
             }
         }
 
-        PushedBlocklists = new List<PushBlock>();
+        colorLists = new List<int>();
         // StartCoroutine(CheckAllResourcesGathered(1f));
     }
 
@@ -398,6 +402,17 @@ public class EnvController : MonoBehaviour
             default:
                 print("No such group");
                 break;
+        }
+    }
+
+    public void HealingGroup()
+    {
+        foreach (var item in AdventurersList)
+        {
+            if (!item.Adventurer.isDead)
+            {
+                item.Adventurer.GetCure(1);
+            }
         }
     }
 

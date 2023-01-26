@@ -11,9 +11,7 @@ public class CursorController : MonoBehaviour
 
     private Camera mainCamera;
 
-    [SerializeField] GameObject inventory;
-
-    [SerializeField] GameObject clickedObject;
+    [SerializeField] GameObject clickedObject; 
 
     private void Awake() {
         controls = new CursorControls();
@@ -43,24 +41,23 @@ public class CursorController : MonoBehaviour
         clickedObject = GetClickedObject();
         if (clickedObject)
         {
-            if (inventory && !inventory.activeInHierarchy)
+            /* Case1 */
+            if (clickedObject.tag == "MonsterSpawner")
             {
-                /* Case1 : Draggable Object */
-                if (clickedObject.TryGetComponent<DraggableObject>(out var objectDrag))
-                    objectDrag.DragObject();
-                /* Case2 : Monster 
-                else if (clickedObject.TryGetComponent<Block>(out var block)) 
-                {
-                    block.SpawnZombie();
-                }  */
+                Debug.Log("Spawn monster at " + GetMouseWorldPosition());
+                clickedObject.GetComponentInParent<Board>().SpawnMonsterByClick(GetMouseWorldPosition());
             }
         }
-
     }
 
     private void EndedClick() {
         ChangeCursor(cursor);
         clickedObject = null;
+    }
+
+    private void ChangeCursor(Texture2D cursorType) {
+        // Vector2 hotspot = new Vector2(cursorType.width/2, cursorType.height/2);
+        Cursor.SetCursor(cursorType, Vector2.zero, CursorMode.Auto);
     }
 
     public GameObject GetClickedObject() {
@@ -85,11 +82,6 @@ public class CursorController : MonoBehaviour
             return Vector3.zero;
         }
         return Vector3.zero;
-    }
-
-    private void ChangeCursor(Texture2D cursorType) {
-        // Vector2 hotspot = new Vector2(cursorType.width/2, cursorType.height/2);
-        Cursor.SetCursor(cursorType, Vector2.zero, CursorMode.Auto);
     }
 
     public Vector2 GetCursorPosition() {

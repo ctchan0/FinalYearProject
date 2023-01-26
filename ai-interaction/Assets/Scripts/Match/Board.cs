@@ -11,8 +11,9 @@ public class Board : MonoBehaviour
 {
     // tile 
     private GridLayout gridLayout;
-    public Tilemap tilemap { get; private set; }
-    [SerializeField] private TileBase gridTile;
+    [SerializeField] private Tilemap tilemap;
+    [SerializeField] private TileBase markTile;
+
 
     // board
     public int boardWidth = 10;
@@ -26,17 +27,20 @@ public class Board : MonoBehaviour
 
     // blocks management
     public BlockManager blockManager {get; set;}
-    public GameObject blocks;
+    public GameObject blocks; // the origin
 
     // game state / parameters
     public int numberOfMonsters;
     public int numberOfBlocks;
     public bool gameOver = false;
+    public bool enableSpawner = false;
+    private bool canSpawn = false;
+    public bool active = true;
+    public int spawnInterval = 3;
 
     private void Awake()
     {
         this.gridLayout = GetComponent<Grid>();
-        this.tilemap = GetComponentInChildren<Tilemap>();
 
         blockManager = new BlockManager(this, boardDepth, boardWidth);
 
@@ -45,135 +49,6 @@ public class Board : MonoBehaviour
         {
             this.traps[i].Initialize();
         }
-    }
-
-    private void Start()
-    {
-        
-    }
-
-    /*
-    public void StartMonsterTurn() // handle the monsters' effect after one turn pass
-    {
-        List<MonsterBlock> mBlocks = new List<MonsterBlock>();
-        foreach (var block in blockManager.blocks)
-        {
-            if (block == null)
-                continue;
-            if (block.type == BlockType.monster)
-            {
-                mBlocks.Add(block as MonsterBlock);
-            }
-        }
-        StartCoroutine(HandleMonsterBlockTurn(mBlocks));
-    } */
-
-    /*
-    private IEnumerator HandleMonsterBlockTurn(List<MonsterBlock> blocks)
-    {
-        if (blocks.Count != 0)
-        {
-            if (this.blockManager.blocks[blocks[0].index] != null) // if still exists in the board
-            {
-                // blocks[0].IMMUNITY = false;
-                // blocks[0].TURN--;
-            }
-            blocks.RemoveAt(0);
-        }
-        if (blocks.Count == 0)
-        {
-            yield return null;
-            activePiece.StartNewTurn();
-        }
-        else
-        {
-            yield return new WaitForSeconds(0.5f);
-            StartCoroutine(HandleMonsterBlockTurn(blocks));
-        }
-    } */
-
-    public void SpawnMonsterAt(int index, int n) // n == -1 : randomly spawn
-    {
-        //if (n != -1)
-        //    Debug.Log(index);
-        if (n == -1)
-            n = Random.Range(0, monsterBlocks.Length);
-        int row = index / boardWidth;
-        int col = index % boardWidth;
-
-        // if there is no empty space for spawning, push the block upwards
-        if (blockManager.blocks[index] != null)
-        {
-            blockManager.AllBlocksMoveUpStartFrom(index);
-        }
-        MonsterBlock monsterBlock = Instantiate(monsterBlocks[n], 
-                                            blocks.transform.position + new Vector3(col, 0, row), 
-                                            monsterBlocks[n].transform.rotation);
-        monsterBlock.board = this;
-        numberOfMonsters++;
-        blockManager.PlaceBlock(monsterBlock, row, col);
-    }
-
-    public void SpawnBlockAt(int index, int n) // n == -1 : randomly spawn
-    {
-        if (n == -1)
-            n = Random.Range(0, trapBlocks.Length);
-        int row = index / boardWidth;
-        int col = index % boardWidth;
-
-        // if there is no empty space for spawning, push the block upwards
-        if (blockManager.blocks[index] != null)
-        {
-            blockManager.AllBlocksMoveUpStartFrom(index);
-        }
-        Block trapBlock = Instantiate(trapBlocks[n], 
-                                        blocks.transform.position + new Vector3(col, 0, row), 
-                                        trapBlocks[n].transform.rotation);
-
-        blockManager.PlaceBlock(trapBlock, row, col);
-    }
-
-    public void SpawnMonster(int numOfRow)
-    {
-        for (int i = 0; i < numOfRow * boardWidth; i++)
-        {
-            int spawn = Random.Range(0, 2);
-            if (spawn == 0) 
-                continue; // chance of not spawning
-            SpawnMonsterAt(i, -1);
-        }
-        activePiece.ghost.UpdatePos();
-    }
-
-    public void DestroyBlock(Block block)
-    {
-        if (block)
-        {
-            numberOfBlocks--;
-            Destroy(block.gameObject);
-        }
-    }
-
-    /*
-    public IEnumerator SpawnMonsterBlock(int spawnInterval)
-    {
-        while(activePiece.CloseToGhost())
-        {
-            yield return new WaitForSeconds(0.1f);
-        }
-
-        AllBlocksMoveUp(1);
-        activePiece.ghost.UpdatePos();
-        SpawnMonster(1);
-        
-        yield return new WaitForSeconds(30f);
-    } */
-
-
-    public Trap GetRandomTrap()
-    {
-        int random = Random.Range(0, this.traps.Length);
-        return this.traps[random];
     }
 
     public void GameOver(bool win)
@@ -211,6 +86,145 @@ public class Board : MonoBehaviour
         activePiece.EndEpisode();
     }
 
+    public bool IsValidPos(Vector3Int localPos, Vector3Int[] route)
+    {
+        for (int i = 0; i < route.Length; i++)
+        {
+            Vector3Int pos = route[i] + localPos;
+           
+            if (pos.x < 0 || pos.x >= boardWidth)
+                return false;
+            if (pos.z < 0 || pos.z >= boardDepth)
+                return false;
+
+            int index = pos.z * boardWidth + pos.x;
+
+            if (blockManager.blocks[index] != null) // occupied
+                return false;
+            
+        }
+        return true;
+    }
+
+    #region Monster
+    public void StartMonsterTurn() // human-playable
+    {
+        if (enableSpawner)
+        {
+            blockManager.AllBlocksMoveUp(1);
+            // SpawnMonsterInAuto(1); // should always turn canSpawn to be true
+            StartCoroutine(SpawnMonster());
+        }
+        else
+            this.activePiece.StartAdventurerTurn();
+        /*
+        List<MonsterBlock> mBlocks = new List<MonsterBlock>();
+        foreach (var block in blockManager.blocks)
+        {
+            if (block == null)
+                continue;
+            if (block.type == BlockType.monster)
+            {
+                mBlocks.Add(block as MonsterBlock);
+            }
+        }
+        StartCoroutine(HandleMonsterBlockTurn(mBlocks));
+        */
+    } 
+
+    public IEnumerator SpawnMonster()
+    {
+        canSpawn = true;
+        Debug.Log("Monster's turn: you can spawn Monster at the bottom now by clicking!");
+        yield return new WaitForSeconds(10f);
+        canSpawn = false;
+        Debug.Log("End of Monster's turn");
+
+        activePiece.ghost.UpdatePos();
+        this.activePiece.StartAdventurerTurn();
+    }
+
+    public void SpawnMonsterByClick(Vector3 position)
+    {
+        if (!canSpawn) return;
+        int index = (int)position.x;
+        if (blockManager.blocks[index] != null) return;
+
+        SpawnMonsterAt(index);
+    }
+
+    public void SpawnMonsterAt(int index, int n = -1) // n == -1 : randomly spawn
+    {
+        if (n == -1)
+            n = Random.Range(0, monsterBlocks.Length);
+        int row = index / boardWidth;
+        int col = index % boardWidth;
+
+        // if there is no empty space for spawning, push the block upwards
+        if (blockManager.blocks[index] != null)
+        {
+            blockManager.AllBlocksMoveUpStartFrom(index);
+        }
+        MonsterBlock monsterBlock = Instantiate(monsterBlocks[n], 
+                                            blocks.transform.position + new Vector3(col, 0, row), 
+                                            monsterBlocks[n].transform.rotation);
+        monsterBlock.board = this;
+        numberOfMonsters++;
+        blockManager.PlaceBlock(monsterBlock, row, col);
+    }
+
+    public void SpawnMonsterInAuto(int numOfRow)
+    {
+        for (int i = 0; i < numOfRow * boardWidth; i++)
+        {
+            int spawn = Random.Range(0, 2);
+            if (spawn == 0) 
+                continue; // chance of not spawning
+            SpawnMonsterAt(i, -1);
+        }
+        activePiece.ghost.UpdatePos();
+    }
+
+    /*
+    private IEnumerator HandleMonsterBlockTurn(List<MonsterBlock> blocks)
+    {
+        if (blocks.Count != 0)
+        {
+            if (this.blockManager.blocks[blocks[0].index] != null) // if still exists in the board
+            {
+                // blocks[0].IMMUNITY = false;
+                // blocks[0].TURN--;
+            }
+            blocks.RemoveAt(0);
+        }
+        if (blocks.Count == 0)
+        {
+            yield return null;
+            activePiece.StartNewTurn();
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.5f);
+            StartCoroutine(HandleMonsterBlockTurn(blocks));
+        }
+    } */
+    #endregion
+
+    #region Blocks
+    public void AddBlock()
+    {
+        numberOfBlocks++;
+    }
+
+    public void DestroyBlock(Block block)
+    {
+        if (block)
+        {
+            numberOfBlocks--;
+            Destroy(block.gameObject);
+        }
+    }
+
     public Queue<int> Occupy(PieceAgent piece) 
     {
         if (piece.route.Length == 0)
@@ -224,16 +238,30 @@ public class Board : MonoBehaviour
         
         return q;
     }
+    #endregion
 
+    #region Trap Request
+    public Trap GetRandomTrap()
+    {
+        int random = Random.Range(0, this.traps.Length);
+        return this.traps[random];
+    }
+
+    public Trap GetTrap(int index)
+    {
+        return this.traps[index]; 
+    }
+    #endregion
+
+    #region Match
     public void Match(Queue<int> matchSeq)
     {
+        /* No match and drop anymore */
         if (matchSeq.Count == 0) 
         {
-            if (!gameOver)
-            {
-                activePiece.Turn++;
-                activePiece.SetNewTrap();
-            }
+            if (!gameOver && active)
+                activePiece.StartNewTurn();
+
             return;
         }
 
@@ -267,37 +295,24 @@ public class Board : MonoBehaviour
 
         StartCoroutine(PrepareForMatch(nextMatchSeq));
     }
-
     public IEnumerator PrepareForMatch(Queue<int> matchSeq)
     {
         yield return new WaitForSeconds(0.5f);
         Match(matchSeq);
     } 
 
-    public void AddBlock()
+    #endregion
+
+    #region Tile
+    public void MarkLocation(Vector3Int localPos)
     {
-        numberOfBlocks++;
+        Vector3Int pos = new Vector3Int(localPos.x - (boardWidth / 2), localPos.z - (boardDepth / 2), localPos.y);
+        tilemap.SetTile(pos, markTile);
     }
 
-    public bool IsValidPos(Vector3Int localPos, Vector3Int[] route)
+    public void RemoveMark()
     {
-        for (int i = 0; i < route.Length; i++)
-        {
-            Vector3Int pos = route[i] + localPos;
-           
-            if (pos.x < 0 || pos.x >= boardWidth)
-                return false;
-            if (pos.z < 0 || pos.z >= boardDepth)
-                return false;
-
-            int index = pos.z * boardWidth + pos.x;
-
-            if (blockManager.blocks[index] != null) // occupied
-                return false;
-            
-        }
-        return true;
+        tilemap.ClearAllTiles();
     }
-    
-
+    #endregion
 }

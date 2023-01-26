@@ -97,7 +97,7 @@ public class BlockManager
 
     #region Block Controls
 
-    private void AllBlocksMoveUp(int degreeOfRow)
+    public void AllBlocksMoveUp(int degreeOfRow)
     {
         for (int i = rowSize - 1; i >= 0; i--) // for each row from the top
         {
@@ -193,7 +193,7 @@ public class BlockManager
             // {
             if (board)
             {
-                board.activePiece.ClearMonster();
+                board.activePiece.ClearMonster(blocks[index].colour);
                 board.DestroyBlock(blocks[index]);
             }
             blocks[index] = null;
@@ -315,7 +315,7 @@ public class BlockManager
         {
             _matchedList = matchedList,
             _hasMatch = HasAMatch(matchedList),
-            _matchNumber = GetNumberOfMatch(matchedList),
+            _linkNumber = GetNumberOfMatch(matchedList),
             _eliminatedMonsterNumber = n,
             _smoothness = GetSmoothness(),
             _levelReduction = (prevLevel - GetCurrentLevel()) / rowSize,

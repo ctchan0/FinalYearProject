@@ -12,6 +12,7 @@ public enum TrapShape
     L,
     S,
     Z,
+    None,
 }
 
 [System.Serializable]

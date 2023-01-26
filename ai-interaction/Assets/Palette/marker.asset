@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: tile
+  m_Name: marker
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 7482667652216324306, guid: 4c0219f6fe17e0447bf3f79dbf8105c9, type: 3}
-  m_Color: {r: 0.38690013, g: 0.6698113, b: 0.11163515, a: 0.5882353}
+  m_Sprite: {fileID: 903026903, guid: e519665b71ce69149ad19d7950ae69ba, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
     e01: 0

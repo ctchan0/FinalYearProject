@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3176532770943899206}
   - component: {fileID: 1607194804869069436}
   - component: {fileID: 1238304422450897780}
-  - component: {fileID: 587089949}
+  - component: {fileID: 8421364950848910939}
   m_Layer: 0
   m_Name: PieceAgent
   m_TagString: Untagged
@@ -68,8 +68,10 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  EnableMoveDown: 0
+  humanPlayable: 0
+  isTesting: 0
   board: {fileID: 0}
+  spawnTrap: 0
   rotationIndex: 0
   trapBlockPrefab:
   - {fileID: 8080221884633480102, guid: df063e6e1a9c03b4e994f8775d322ed3, type: 3}
@@ -125,19 +127,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DisableInput: 0
---- !u!114 &587089949
+--- !u!114 &8421364950848910939
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3176532770943899201}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Record: 0
-  NumStepsToRecord: 0
-  DemonstrationName: PieceDemo
-  DemonstrationDirectory: 
+  m_SensorName: LocationBufferSensor
+  m_ObservableSize: 6
+  m_MaxNumObservables: 20

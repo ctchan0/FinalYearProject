@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1653178787479982577}
   - component: {fileID: 1590316642479508818}
-  - component: {fileID: -7328328899271494528}
   m_Layer: 0
   m_Name: RedBlock
   m_TagString: Red
@@ -50,19 +49,6 @@ MonoBehaviour:
   colour: 1
   board: {fileID: 0}
   index: 0
---- !u!65 &-7328328899271494528
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1653178787479982578}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 0.95, y: 1, z: 0.95}
-  m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!1001 &1653178787712743756
 PrefabInstance:
   m_ObjectHideFlags: 0

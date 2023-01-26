@@ -4,17 +4,13 @@ using UnityEngine;
 
 public class PushBlock : MonoBehaviour
 {
-    private EnvController env;  //
+    public EnvController env;  //
+    public int color;
 
-    private void Awake()
-    {
-        env = GetComponentInParent<EnvController>();
-    }
-
-    void OnCollisionEnter(Collision col)
+    private void OnTriggerEnter(Collider other) 
     {
         // Touched goal.
-        if (col.gameObject.CompareTag("Goal"))
+        if (other.gameObject.CompareTag("Goal"))
         {
             // check if all blocks are pushed to goal
             env.AddPushedBlock(this);

@@ -248,7 +248,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7033634356193571943}
   - component: {fileID: 7143313178287546091}
-  - component: {fileID: 7532673328075509096}
   m_Layer: 0
   m_Name: YellowMonsterBlock
   m_TagString: YellowMonster
@@ -289,19 +288,6 @@ MonoBehaviour:
   colour: 2
   board: {fileID: 0}
   index: 0
---- !u!65 &7532673328075509096
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5543726763012827754}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 0.95, y: 1, z: 0.95}
-  m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!1001 &4464396036924345940
 PrefabInstance:
   m_ObjectHideFlags: 0

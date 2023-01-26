@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3475960566372817939}
   - component: {fileID: 8080221884633480102}
-  - component: {fileID: -2087167239712324933}
   m_Layer: 0
   m_Name: BlueBlock
   m_TagString: Blue
@@ -50,19 +49,6 @@ MonoBehaviour:
   colour: 0
   board: {fileID: 0}
   index: 0
---- !u!65 &-2087167239712324933
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3475960566372817936}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 0.95, y: 1, z: 0.95}
-  m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!1001 &3475960566001595566
 PrefabInstance:
   m_ObjectHideFlags: 0
