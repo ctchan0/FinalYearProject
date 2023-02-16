@@ -2571,8 +2571,10 @@ MonoBehaviour:
   numberOfMonsters: 0
   numberOfBlocks: 0
   gameOver: 0
-  enableSpawner: 1
-  spawnInterval: 2
+  enableSpawner: 0
+  autoSpawner: 0
+  active: 1
+  spawnInterval: 10
 --- !u!1 &86626013124011863
 GameObject:
   m_ObjectHideFlags: 0
@@ -3267,30 +3269,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 86626013379621647}
     m_Modifications:
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_Model
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_InferenceDevice
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_BrainParameters.VectorActionSize.Array.data[0]
-      value: 800
-      objectReference: {fileID: 0}
-    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_BrainParameters.m_ActionSpec.BranchSizes.Array.data[0]
-      value: 800
-      objectReference: {fileID: 0}
     - target: {fileID: 3176532770943899201, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
       propertyPath: m_Name
       value: PieceAgent
@@ -3347,30 +3325,6 @@ PrefabInstance:
       propertyPath: ghost
       value: 
       objectReference: {fileID: 1412467700915924919}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: isRandom
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: dropSpeed
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: isTesting
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: spawnTrap
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 3176532770943899206, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: DefaultSpawningRange
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8421364950848910939, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
-      propertyPath: m_MaxNumObservables
-      value: 800
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
 --- !u!114 &4579976489654459740 stripped

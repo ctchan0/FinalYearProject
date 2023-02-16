@@ -188,9 +188,21 @@ public struct MatchEvaluation
 
     public void PrintInformation()
     {
-        Debug.Log("Score Assessment");
+        Debug.Log("Score Assessment of the selected location");
+        if (_linkNumber != 0)
+        {
+            string str = "Match list: [";
+            for (int i = 0; i < _matchedList.Count - 1; i++)
+            {
+                str += _matchedList[i];
+                str += ", ";
+            }
+            str += _matchedList[_matchedList.Count - 1];
+            str += "]";
+            Debug.Log(str);
+        }
         Debug.Log("HasMatch: " + _hasMatch);
-        Debug.Log("MatchNumber: " + _linkNumber);
+        Debug.Log("LinkNumber: " + _linkNumber);
         Debug.Log("ElimainedMonsterNumber: " + _eliminatedMonsterNumber);
         Debug.Log("Smoothness: " + _smoothness);
     }
@@ -213,12 +225,12 @@ public class PieceAgent : Agent
 
     /* Trap */
     // private BufferSensorComponent m_TrapBuffer;
-    private BufferSensorComponent m_LocationBuffer;
+    // private BufferSensorComponent m_LocationBuffer;
     public Board board;
     public TrapShape spawnTrap; // allows to choose a specific trap
     public Trap trapData { get; private set; }
     public int rotationIndex { get; set; }
-    public bool isMonochrome { get; set; }
+    // public bool isMonochrome { get; set; }
     public Block[] trapBlockPrefab; // block with different colors
     public Block[] trapBlocks;
     public Vector3Int[] route { get; private set; }
@@ -235,7 +247,9 @@ public class PieceAgent : Agent
     /* States of Agent */
     private List<Location> locations;
     private List<int> possibleIndex = new List<int>();
-    // private List<float> StatesOfLoc = new List<float>();
+    // private int numberOfChoices = 0;
+    private List<float> StatesOfLoc = new List<float>();
+    private List<float> blockManager = new List<float>();
     // private int currentLoc;
     // public List<int> matches {get; set;}
     // public int numberOfMatches {get; set;}
@@ -269,8 +283,8 @@ public class PieceAgent : Agent
     {
         input = GetComponent<MatchController>();
 
-        var buffer = GetComponents<BufferSensorComponent>();
-        m_LocationBuffer = buffer[0];
+        // var buffer = GetComponents<BufferSensorComponent>();
+        // m_LocationBuffer = buffer[0];
         // m_TrapBuffer = buffer[1];
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
@@ -306,9 +320,15 @@ public class PieceAgent : Agent
     public void StartAdventurerTurn(List<int> colorList = null)
     {
         if (spawnTrap == TrapShape.None)
+        {
             trapData = board.GetRandomTrap();
-        else trapData = board.GetTrap((int)spawnTrap);
-        Debug.Log("Trap " + spawnTrap + " is created!");
+            // Debug.Log("Random trap is created");
+        }
+        else 
+        {
+            trapData = board.GetTrap((int)spawnTrap);
+            Debug.Log("Trap " + spawnTrap + " is created!");
+        }
 
         /* Check win & lose condition */
         int state = GetConditionState();
@@ -322,7 +342,7 @@ public class PieceAgent : Agent
 
     public int GetConditionState()
     {
-        Debug.Log("Checking game conditions...");
+        // Debug.Log("Checking game conditions...");
 
         /* Construct the route of new trap first */
         this.route = new Vector3Int[trapData.route.Length];
@@ -344,7 +364,7 @@ public class PieceAgent : Agent
         }
         else if (board.numberOfMonsters == 0)
         {
-            Debug.Log("Turns to win: " + Turn);
+            // Debug.Log("Turns to win: " + Turn);
             return 1;
         }
 
@@ -385,10 +405,11 @@ public class PieceAgent : Agent
             }
         }
 
+        /*
         if (trapBlocks[0].colour == trapBlocks[2].colour)
             isMonochrome = true;
         else
-            isMonochrome = false;
+            isMonochrome = false; */
 
         this.rotationIndex = 0;
 
@@ -486,12 +507,13 @@ public class PieceAgent : Agent
                     Vector3Int pos = new Vector3Int(col, 0, row);
                     Location loc = new Location(this.board, pos, route, rotIndex, MatchEvaluation.GetEmpty());
 
+                    /* need optimization */
                     if (this.board.IsValidPos(pos, route) 
                         && !this.board.IsValidPos(pos - Vector3Int.forward, route))
-                    {                    
-                        // var path = GetOptimalPath(trapData, startLoc, loc);
-                        // if (path.Count != 0) 
-                        // {
+                    {          
+                        var path = GetOptimalPath(trapData, startLoc, loc);
+                        if (path != null && path.Count != 0) 
+                        {
                             MatchEvaluation score = new MatchEvaluation();
                             var scanner = new BlockManager(null, board.boardDepth, board.boardWidth);
                             score = scanner.GetMatchEvaluationAt(this, pos, route);
@@ -499,9 +521,9 @@ public class PieceAgent : Agent
                             // Debug.Log("Trap can move to position (" + pos.x + ", " 
                             //            + pos.z + "), with rotation index " + rotIndex);
                             possibleIndex.Add(n);
-                        // }                      
+                        }                      
                     }
-                    locations.Add(loc);
+                    locations.Add(loc); 
                     n++;
                 }
             }
@@ -521,14 +543,30 @@ public class PieceAgent : Agent
         //Debug.Log("Total number of locations: " + locations.Count);
         //locations = GetAllBaseLocations(trapData);
 
-        //StatesOfLoc = new List<float>();
-        //foreach (var loc in locations)
-        //{
-        //    float[] state = GetStateFromLoc(loc._pos, loc._rotIndex, loc._score);
-        //    StatesOfLoc.AddRange(state);
-        //}
+        StatesOfLoc = new List<float>();
+        foreach (var loc in locations)
+        {
+            float[] state = GetStateFromLoc(loc._pos, loc._rotIndex, loc._score);
+            StatesOfLoc.AddRange(state);
+        }
 
-        RequestDecision();
+        blockManager = new List<float>();
+        var blocks = this.board.blockManager.blocks;
+        for (int i = 0; i < 200; i++)
+        {
+            if (blocks[i] == null)
+                blockManager.Add(0f);
+            else
+            {
+                
+                blockManager.Add(1f);
+            }
+        }
+
+        if (possibleIndex.Count == 0)
+            StartCoroutine(Push());
+        else
+            RequestDecision();
     }
 
     private int m_AgentStepCount; // current agent step
@@ -555,6 +593,7 @@ public class PieceAgent : Agent
                 print("Missing locations to choose");
                 return;
             }
+            /* Includes all possible locations, which has a total number of 10 x 20 x 4 = 800 */
             for (int i = 0; i < locations.Count; i++)
             {
                 if (!locations[i]._score.Exists)
@@ -568,6 +607,23 @@ public class PieceAgent : Agent
                     actionMask.SetActionEnabled(0, i, true);
                 }
             }
+            
+            /* Includes all valid locations only, which has a maximum number of n
+            int n = 100;
+            if (possibleIndex != null && possibleIndex.Count >= 2) // should have at least 2 choices provided
+            {
+                if (possibleIndex.Count <= n)
+                {
+                    for (int i = 0; i < possibleIndex.Count; i++)
+                        actionMask.SetActionEnabled(0, i, true);
+                    for (int j = possibleIndex.Count; j < n; j++)
+                        actionMask.SetActionEnabled(0, j, false);
+                }
+                else
+                {
+                    Debug.Log("Overflow of possible index: " + possibleIndex.Count);
+                }
+            } */
         }
     }
 
@@ -587,29 +643,51 @@ public class PieceAgent : Agent
             */
 
             /* new model actions : Choose location -> construct path -> move according to path */
-            int locationIndex = discreteActions[0];
-            if (isRandom)
-                locationIndex = possibleIndex[Random.Range(0, possibleIndex.Count)];
-            
-            if (locations[locationIndex]._score.Exists)
+            int locationIndex = discreteActions[0]; // n is the position of the possible index list
+            // Debug.Log("Number of possible index: " + possibleIndex.Count);
+
+            /* Check validity action mask 
+            if (n < 0 || n >= possibleIndex.Count)
+                Debug.Log("Invalid input"); */
+
+            if (possibleIndex.Count < 2)
             {
-                var selectedLoc = locations[locationIndex];
-
-                /* Mark the locations */
-                if (hasMark)
-                {
-                    for (int i = 0; i < selectedLoc._route.Length; i++)
-                    {
-                        board.MarkLocation(selectedLoc._pos + selectedLoc._route[i]);
-                    }
-                }
-
-                /* Get the path and start to move */
-                var path = GetOptimalPath(trapData, start, selectedLoc);
-                StartCoroutine(MoveTrap(path));
+                Debug.Log("There are no choices available");
+                StartCoroutine(Push());
             }
             else
-                Debug.Log("Invalid input size");
+            {
+                if (isRandom)
+                {
+                    int n = Random.Range(0, possibleIndex.Count);
+                    locationIndex = possibleIndex[n];
+                }
+                
+                if (locations[locationIndex]._score.Exists)
+                {
+                    var selectedLoc = locations[locationIndex];
+                    // Debug.Log("Choose index " + locationIndex);
+                    // locations[locationIndex]._score.PrintInformation();
+
+                    /* Mark the locations */
+                    if (hasMark)
+                    {
+                        for (int i = 0; i < selectedLoc._route.Length; i++)
+                        {
+                            board.MarkLocation(selectedLoc._pos + selectedLoc._route[i]);
+                        }
+                    }
+
+                    /* Get the path and start to move */
+                    var path = GetOptimalPath(trapData, start, selectedLoc);
+                    StartCoroutine(MoveTrap(path));
+                }
+                else
+                {
+                    Debug.Log("Invalid input: " + locationIndex);
+                    StartCoroutine(Push()); // push the trap downwards without any actions performed
+                }
+            }
         }
 
         /* Human: Full Control of Piece (Note: Need Decision Requester!!!!!!!!!!!!!!!) */
@@ -694,7 +772,7 @@ public class PieceAgent : Agent
 
         Path path = new Path(new State(startLoc, Action.None, GetDistanceCost(startLoc, endLoc)));
 
-        Heap<Path> paths = new Heap<Path>(1000000);
+        Heap<Path> paths = new Heap<Path>(1000);
         paths.Add(path);
 
         while (paths.Count > 0)
@@ -712,13 +790,13 @@ public class PieceAgent : Agent
                 optimalPath.path.RemoveAt(0); // remove the first state (i.e. start) since it has no actions
                 foreach (var s in optimalPath.path)
                     actions.Add(s._action);
-                Debug.Log("There is a path");
+                paths.Clear();
                 return actions;
             }
 
             foreach (var nextState in GetNextStates(trapData, currentState._location, endLoc))
             {
-                if (nextState._location.ContainIn(visited))
+                if (nextState._location._pos.z < endLoc._pos.z || nextState._location.ContainIn(visited))
                     continue;
                 // construct new path with successors (need deep copy!!!)
                 var newPath = new Path(optimalPath.path);
@@ -728,8 +806,9 @@ public class PieceAgent : Agent
             }
         }
 
-        Debug.Log("There is no optimal path");
-        return actions; // actions will be none if cannot reach the goal
+        // Debug.Log("There is no optimal path");
+        paths.Clear();
+        return null; // actions will be none if cannot reach the goal
     }
 
     List<State> GetNextStates(Trap trapData, Location loc, Location endLoc)
@@ -789,9 +868,14 @@ public class PieceAgent : Agent
 
     public IEnumerator MoveTrap(List<Action> path)
     {
-        if (path == null || path.Count == 0)
+        if (path == null)
         {
             Debug.Log("Invalid path provided");
+            StartCoroutine(Push());
+        }
+        else if (path.Count == 0)
+        {
+            /* the spawn position is the target position */
             StartCoroutine(Push());
         }
         else
@@ -822,7 +906,7 @@ public class PieceAgent : Agent
                 }
                 yield return new WaitForSeconds(0.5f);
             }
-            Debug.Log("Trap is placed");
+            // Debug.Log("Trap is placed");
             Place();
         }
     }
@@ -984,9 +1068,11 @@ public class PieceAgent : Agent
         level = board.blockManager.GetCurrentLevel();
         if (level > (board.boardDepth - 3))
             AddReward(-1f);
+        // else
+            // AddReward(-level / (board.boardDepth * 2));
+        
         // Debug.Log("Level: " + -level / board.boardDepth); 
-        else
-            AddReward(-level / board.boardDepth);
+        
         // Debug.Log("Placed Position: " + (-this.transform.localPosition.z / board.boardDepth));
         // AddReward(-this.transform.localPosition.z / (board.boardDepth - 1));
 
@@ -1010,20 +1096,26 @@ public class PieceAgent : Agent
     }
     public void ClearMonster(int colour)
     {
-        switch (colour)
-        {
-            case 0: // blue
-                m_EnvController.HealingGroup();
-                break;
-            case 1: // red
-                break;
-            case 2: // yellow
-                break;
-            default:
-                break;
-        }
         board.numberOfMonsters--;
         AddReward(1f);
+
+        if (m_EnvController)
+        {
+            switch (colour)
+            {
+                case 0: // blue
+                    m_EnvController.GetSpeed();
+                    break;
+                case 1: // red
+                    m_EnvController.GetStrength();
+                    break;
+                case 2: // yellow
+                    m_EnvController.GetCure();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public void ConsumeOneTurn()
@@ -1037,9 +1129,15 @@ public class PieceAgent : Agent
     {
         
         sensor.AddOneHotObservation((int)trapData.shape, 7); // 7 represents the size of trap type enum
-        sensor.AddObservation(isMonochrome);
+        // sensor.AddObservation(isMonochrome);
+        sensor.AddObservation(StatesOfLoc);
+        sensor.AddObservation(blockManager);
+        /*
         foreach (var loc in locations)
+        {
             m_LocationBuffer.AppendObservation(GetStateFromLoc(loc._pos, loc._rotIndex, loc._score));
+        }
+        */
     }
 
     private float[] GetStateFromLoc(Vector3Int pos, int rotIndex, MatchEvaluation score)
@@ -1058,6 +1156,7 @@ public class PieceAgent : Agent
         }
         else
         {
+            // Debug.Log("There is a wrong observation on an invalid location");
             locData[0] = -1;
             locData[1] = -1;
             locData[2] = -1;

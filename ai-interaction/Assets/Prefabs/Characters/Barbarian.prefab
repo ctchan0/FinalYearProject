@@ -18,6 +18,8 @@ GameObject:
   - component: {fileID: 1275012485181040034}
   - component: {fileID: 9039390970813754109}
   - component: {fileID: 3684450130722442172}
+  - component: {fileID: 464401811}
+  - component: {fileID: 1690616580}
   m_Layer: 0
   m_Name: Barbarian
   m_TagString: Adventurer
@@ -85,11 +87,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 8
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 11
+    NumStackedVectorObservations: 2
     m_ActionSpec:
       m_NumContinuousActions: 3
-      BranchSizes: 0200000004000000
+      BranchSizes: 02000000
     VectorActionSize: 
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
@@ -137,7 +139,9 @@ MonoBehaviour:
   canControl: 1
   turnSpeed: 300
   moveSpeed: 3
+  currentSpeed: 2
   worth: 0.3
+  attack: 3
   maxHealth: 5
   isDead: 0
   axe: {fileID: 7940088926354839916}
@@ -145,6 +149,7 @@ MonoBehaviour:
   sword: {fileID: 0}
   shield: {fileID: 0}
   arrowPrefab: {fileID: 0}
+  pushingBlock: {fileID: 0}
 --- !u!114 &4752494930575889161
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -294,9 +299,10 @@ MonoBehaviour:
   m_DetectableTags:
   - Adventurer
   - Monster
-  - Breakable
-  - Unbreakable
+  - Block
   - Item
+  - Goal
+  - Wall
   m_ColliderMask:
     serializedVersion: 2
     m_Bits: 1
@@ -307,7 +313,8 @@ MonoBehaviour:
   - {r: 0.48235297, g: 0.07450981, b: 0.1764706, a: 0}
   - {r: 0.29656518, g: 0.48235294, b: 0.07450979, a: 0}
   - {r: 0.3865175, g: 0.19479053, b: 0.46226418, a: 0}
-  - {r: 0.6320754, g: 0.400772, b: 0.15901265, a: 0}
+  - {r: 0.764151, g: 0.64487505, b: 0.14898534, a: 0}
+  - {r: 0.4245283, g: 0.41518334, b: 0.41518334, a: 0}
   m_GizmoYOffset: 0
   m_ShowGizmos: 0
   m_CompressionType: 1
@@ -439,6 +446,37 @@ MonoBehaviour:
     m_Flags: 0
   Size: 3
   inventoryItemsList: []
+--- !u!114 &464401811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4752494930416335494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: BufferSensor
+  m_ObservableSize: 3
+  m_MaxNumObservables: 15
+--- !u!114 &1690616580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4752494930416335494}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Record: 0
+  NumStepsToRecord: 0
+  DemonstrationName: Barbarian
+  DemonstrationDirectory: 
 --- !u!1001 &2311751929864813525
 PrefabInstance:
   m_ObjectHideFlags: 0

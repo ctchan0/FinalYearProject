@@ -10,15 +10,27 @@ public class Heap<T> where T : IHeapItem<T>
 {
     T[] items;
     int currentItemCount;
+    int maxSize;
 
     public Heap(int maxHeapSize)
     {
         items = new T[maxHeapSize];
+        maxSize = maxHeapSize;
+    }
+
+    public void Clear()
+    {
+        Array.Clear(items, 0, maxSize);
     }
 
     public void Add(T item)
     {
         item.HeapIndex = currentItemCount;
+        if (currentItemCount >= maxSize)
+        {
+            Array.Resize(ref items, maxSize * 2);
+            maxSize = maxSize * 2;
+        }
         items[currentItemCount] = item;
         SortUp(item);
         currentItemCount++;

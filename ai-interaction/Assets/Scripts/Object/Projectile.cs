@@ -5,20 +5,23 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     [SerializeField] float speed = 40f;
-    public bool shoot { get; set;}
     public AdventurerAgent belonger { get; set;}
     // Start is called before the first frame update
     void Awake()
     {
-        shoot = false;
-        GetComponent<Collider>().enabled = false;
+        // GetComponent<Collider>().enabled = false;
+    }
+
+    void Start()
+    {
+        // Destroy once shoot
+        Destroy(this.gameObject, 5f);
     }
 
     // Update is called once per frame
     void Update()
-    {
-        if (shoot)
-            transform.Translate(Vector3.forward * Time.deltaTime * speed);
+    { 
+        transform.Translate(Vector3.forward * Time.deltaTime * speed);
     }
 
     private void OnTriggerEnter(Collider other) 
@@ -26,10 +29,12 @@ public class Projectile : MonoBehaviour
         if (other.gameObject.CompareTag("Monster"))
         {
             var monster = other.gameObject.GetComponent<MonsterAgent>();
-            belonger.HitTarget(0.5f);
-            belonger.DealDamage(monster, 1);
+            belonger.HitTarget();
+            belonger.DealDamage(monster, belonger.attack);
         }
-        if (shoot)
+        else if (other.gameObject.CompareTag("Wall"))
+        {
             Destroy(this.gameObject);
+        }
     }
 }

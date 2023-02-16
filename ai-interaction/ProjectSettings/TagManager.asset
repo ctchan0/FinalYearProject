@@ -13,16 +13,11 @@ TagManager:
   - Breakable
   - Unbreakable
   - Projectile
-  - Blue
-  - Red
-  - Yellow
-  - BlueMonster
-  - RedMonster
-  - YellowMonster
   - Wall
   - Ghost
   - Goal
   - MonsterSpawner
+  - Block
   layers:
   - Default
   - TransparentFX

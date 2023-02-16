@@ -1147,8 +1147,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 1
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 9
+    NumStackedVectorObservations: 2
     m_ActionSpec:
       m_NumContinuousActions: 3
       BranchSizes: 02000000
@@ -1156,9 +1156,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 1ecfe7aecc948004582869956b3b21c3, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 3
-  m_BehaviorType: 1
+  m_BehaviorType: 0
   m_BehaviorName: Monster
   TeamId: 1
   m_UseChildSensors: 1
@@ -1185,7 +1185,7 @@ MonoBehaviour:
   turnSpeed: 300
   moveSpeed: 2
   damage: 1
-  maxHealth: 4
+  maxHealth: 10
   isDead: 0
 --- !u!114 &3177449171097193630
 MonoBehaviour:
@@ -1326,9 +1326,10 @@ MonoBehaviour:
   m_DetectableTags:
   - Adventurer
   - Monster
-  - Breakable
-  - Unbreakable
+  - Block
   - Item
+  - Goal
+  - Wall
   m_ColliderMask:
     serializedVersion: 2
     m_Bits: 51
@@ -1340,6 +1341,7 @@ MonoBehaviour:
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
   - {r: 0.48235297, g: 0.098039225, b: 0.098039225, a: 0}
+  - {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 0}
   m_GizmoYOffset: 0
   m_ShowGizmos: 0
   m_CompressionType: 1

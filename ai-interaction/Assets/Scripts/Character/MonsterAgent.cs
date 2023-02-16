@@ -99,12 +99,13 @@ public class MonsterAgent : Agent
 
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
-        dirToGo = transform.worldToLocalMatrix.MultiplyVector(transform.forward) * forward;
-        dirToGo += transform.worldToLocalMatrix.MultiplyVector(transform.right) * right;
+
+        dirToGo = new Vector3(right, 0, forward); 
         rotateDir = transform.up * rotate;
 
         transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime);
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
+        
 
         bool actionCommand = discreteActions[0] > 0;
         if (actionCommand)
@@ -124,36 +125,44 @@ public class MonsterAgent : Agent
        
     }
 
-    private void OnCollisionEnter(Collision other) 
+    private void OnCollisionEnter(Collision other) // attack
     {
         if (other.gameObject.CompareTag("Adventurer"))
         {
             var target = other.gameObject.GetComponent<AdventurerAgent>();
             target.GetDamage(damage);
-            AddReward(1f / target.maxHealth);
+            AddReward((float)damage / target.maxHealth);
             if (target.isDead)
                 AddReward(target.worth);
         }
         else if (other.gameObject.CompareTag("Shield")) // attack ineffective
         {
             var adventurerAgent = other.transform.parent.GetComponent<AdventurerAgent>();
-            AddReward(-0.1f);
-            adventurerAgent.AddReward(0.5f); // successful defend
+            AddReward(-0.2f);
+            adventurerAgent.AddReward(0.2f); // successful defend
         }
     }
 
-    private void OnTriggerEnter(Collider other) 
+    private void OnTriggerEnter(Collider other) // being attack
     {
         if (other.gameObject.CompareTag("Sword") || other.gameObject.CompareTag("Axe"))
         {
             var adventurerAgent = other.gameObject.transform.parent.GetComponent<AdventurerAgent>();
-            adventurerAgent.DealDamage(this, 1);
+            adventurerAgent.DealDamage(this, adventurerAgent.attack);
         }
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+
+        foreach (var resource in m_EnvController.ResourcesList)
+        {
+            // if (resource.Resource.activeInHierarchy)
+            var block = resource.Resource.GetComponent<GoalDetectTrigger>();
+            sensor.AddObservation(block.toGoal);
+            sensor.AddObservation(block.GetDistance() / 10f);
+        }
     }
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.

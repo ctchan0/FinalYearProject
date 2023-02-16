@@ -27,7 +27,10 @@ public class AdventurerAgent : Agent
     private Rigidbody rb;
     public float turnSpeed = 300f;
     public float moveSpeed = 2f;
+    public float currentSpeed = 2f;
     public float worth = 0.3f; // life value [0, 1] in game 
+
+    public int attack = 1;
 
     public int maxHealth = 3;
     public int currentHealth { get; set;}
@@ -49,16 +52,23 @@ public class AdventurerAgent : Agent
 
     [Header("Rogue")]
     public GameObject arrowPrefab;
-    GameObject currentArrow;
     
     private bool m_IsDecisionStep;
     bool m_Attack = true;
+    public bool pushing { get; set; }
+    public GoalDetectTrigger pushingBlock;
 
-    int ItemId;
-    // bool m_Use = true;
+    int m_Goal;
+    float[] m_GoalOneHot;
+    private BufferSensorComponent m_EnvBuffer;
+    // private BufferSensorComponent m_BlockBuffer;
 
-
-    public BufferSensorComponent m_Buffer;
+    public enum Mission 
+    {
+        pushBlock, // 0
+        survive, // 1
+        getResource, // 2
+    }
 
     public override void Initialize()
     {
@@ -73,7 +83,9 @@ public class AdventurerAgent : Agent
 
         m_InventoryController = GetComponent<InventoryController>();
 
-        m_Buffer = GetComponent<BufferSensorComponent>();
+        var buffer = GetComponents<BufferSensorComponent>();
+        m_EnvBuffer = buffer[0];
+        //m_BlockBuffer = buffer[1];
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
 
@@ -96,6 +108,13 @@ public class AdventurerAgent : Agent
         SetHealth();
         SetSkills();
         SetInventory();
+
+        turnSpeed = 300f;
+        currentSpeed = moveSpeed;
+        rb.mass = 1f;
+
+        pushing = false;
+        pushingBlock = null;
     }
 
     public void SetInventory()
@@ -106,14 +125,6 @@ public class AdventurerAgent : Agent
     public void SetSkills()
     {
         m_Attack = true;
-
-        if (arrowPrefab != null && currentArrow == null)
-        {
-            currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
-            currentArrow.SetActive(true);
-            currentArrow.GetComponent<Projectile>().belonger = this;
-            currentArrow.transform.SetParent(this.transform);
-        }
     }
     public void SetAgentScale()
     {
@@ -160,7 +171,7 @@ public class AdventurerAgent : Agent
         dirToGo = new Vector3(right, 0, forward); 
         rotateDir = transform.up * rotate;
         
-        transform.Translate(dirToGo * moveSpeed * Time.fixedDeltaTime); // relative to local space
+        transform.Translate(dirToGo * currentSpeed * Time.fixedDeltaTime); // relative to local space
         transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
     }
 
@@ -218,13 +229,13 @@ public class AdventurerAgent : Agent
                     // heal
                     var target = hitObject.GetComponent<AdventurerAgent>();
                     target.GetCure(2);
-                    HitTarget(1 / target.maxHealth);
+                    HitTarget();
                 }
                 else if (hitObject.CompareTag("Monster"))
                 {
                     // deal damage
                     var target = hitObject.GetComponent<MonsterAgent>();
-                    DealDamage(target, 1);
+                    DealDamage(target, attack);
                 }
                 else if (hitObject.CompareTag("Breakable"))
                 {
@@ -246,22 +257,16 @@ public class AdventurerAgent : Agent
         }
         else if (m_Class == Class.Rogue)
         {
-            // shoot 
-            if (currentArrow)
-            {
-                currentArrow.GetComponent<Projectile>().shoot = true;
-                currentArrow.GetComponent<Collider>().enabled = true;
-            }
-
-            yield return new WaitForSeconds(coolDownTime);
             // reload the arrow after a certain period of time
-            if (!currentArrow)
+            for (int i = 0; i < 3; i++)
             {
-                currentArrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
-                currentArrow.SetActive(true);
-                currentArrow.GetComponent<Projectile>().belonger = this;
-                currentArrow.transform.SetParent(this.transform);
+                var arrow = Instantiate(arrowPrefab, arrowPrefab.transform.position, arrowPrefab.transform.rotation);
+                arrow.SetActive(true);
+                arrow.GetComponent<Projectile>().belonger = this;
+                arrow.transform.SetParent(this.transform);
+                yield return new WaitForSeconds(0.25f);
             }
+            yield return new WaitForSeconds(coolDownTime);
         }
         else
         {
@@ -274,11 +279,26 @@ public class AdventurerAgent : Agent
 
     #region Rewards
 
-    public void HitTarget(float point)
+    /* Survive (health system) */
+    public void HitTarget()
     {
-        AddReward(point);
+        AddReward(0.05f);
     }
+    public void DealDamage(MonsterAgent target, int damage)
+    {
+        if (damage > target.maxHealth)
+            damage = target.maxHealth;
+        target.GetDamage(damage);
+        AddReward((float)damage / target.maxHealth);
 
+        if (target.isDead)
+        {
+            // AddReward(0.3f); // price of a monster
+            print($"{m_Class} killed a  monster");
+
+            AddReward(1f / m_EnvController.MonstersList.Count); // bonus price
+        }
+    }
     public void GetDamage(int damage)
     {
         currentHealth -= damage;
@@ -290,15 +310,12 @@ public class AdventurerAgent : Agent
             m_InventoryController.Clear();
             m_EnvController.Eliminate(this.gameObject);
             AddReward(-worth);
-
-            m_EnvController.AddGroupReward(0, -1f / m_EnvController.AdventurersList.Count);
         }
         else
         {
-            AddReward(-1f / this.maxHealth);
+            AddReward((float)-damage / this.maxHealth);
         }
     }
-
     public void GetCure(int healAmount)
     {
         int prvHealth = currentHealth;
@@ -312,21 +329,6 @@ public class AdventurerAgent : Agent
 
         m_HealthBar.SetHealth(currentHealth);
     }
-
-    public void DealDamage(MonsterAgent target, int damage)
-    {
-        if (damage > target.maxHealth)
-            damage = target.maxHealth;
-        target.GetDamage(damage);
-        AddReward((float)damage / target.maxHealth);
-
-        if (target.isDead)
-        {
-            // AddReward(0.3f); // price of a monster
-            AddReward(1f / m_EnvController.MonstersList.Count); // bonus price
-        }
-    }
-
     private void StayAlive()
     {
         if (!isDead)
@@ -350,6 +352,28 @@ public class AdventurerAgent : Agent
             }
         }
     }
+ 
+    /* Get resource */
+    public void PushBlocks()
+    {
+        var block = this.pushingBlock;
+        float distance = Vector3.Distance(block.transform.localPosition, m_EnvController.goal.transform.localPosition);
+
+        if (distance <= 2) // close enough
+        {
+            if (block.optiDistance > 2)
+                block.optiDistance = distance;
+            return;
+        }
+
+        float diff = block.optiDistance - distance;
+        if (diff > 0) // closer to goal
+        {
+            block.optiDistance = distance;
+            // Debug.Log("Pushing block: " + diff * 10); 
+            AddReward(diff * 10); // 10 is a multiplier
+        }  
+    } 
 
     public void DiscoverResources()
     {
@@ -357,32 +381,43 @@ public class AdventurerAgent : Agent
         AddReward(0.5f);
         m_EnvController.AddGroupReward(1, -1f / m_EnvController.ResourcesList.Count); // monsters will lose some advantages
     }
-
     public void CollectResources()
     {
         AddReward(0.5f);
     }
+
+    /* Push blocks (get ideas from mlagent examples: push blocks)*/
+    // rewards are given in m_EnvController (get a block)
 
     #endregion
 
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(m_Attack); // frequency of attack
+        sensor.AddObservation(pushing);
 
         sensor.AddObservation((float)this.currentHealth / this.maxHealth);
 
-        sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
-        sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
-        sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources);
+        // sensor.AddObservation(m_EnvController.m_NumberOfRemainingAdventurers);
+        // sensor.AddObservation(m_EnvController.m_NumberOfRemainingMonsters);
+        // sensor.AddObservation(m_EnvController.m_NumberOfRemainingResources / m_EnvController.ResourcesList.Count);
 
-        sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.forward));
-        sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.right));
+        // sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.forward));
+        // sensor.AddObservation(Vector3.Dot(rb.velocity, rb.transform.right));
 
         // float[] inventorySlot = new float[3];
         // inventorySlot[0] = m_InventoryController.IsItemAvailable(0) ? 1f : 0f;
         // inventorySlot[1] = m_InventoryController.IsItemAvailable(1) ? 1f : 0f;
         // inventorySlot[2] = m_InventoryController.IsItemAvailable(2) ? 1f : 0f;
         // sensor.AddObservation(inventorySlot);
+
+        foreach (var resource in m_EnvController.ResourcesList)
+        {
+            // if (resource.Resource.activeInHierarchy)
+            var block = resource.Resource.GetComponent<GoalDetectTrigger>();
+            sensor.AddObservation(block.toGoal);
+            sensor.AddObservation(block.GetDistance() / 10f);
+        } 
 
         // Add team buffer, and the goal
         List<EnvController.AdventurerInfo> teamList;
@@ -395,7 +430,7 @@ public class AdventurerAgent : Agent
         {
             if (info.Adventurer != this && info.Adventurer.gameObject.activeInHierarchy)
             {
-                m_Buffer.AppendObservation(GetAllyData(info));
+                m_EnvBuffer.AppendObservation(GetAllyData(info));
             }
         }
 
@@ -405,7 +440,7 @@ public class AdventurerAgent : Agent
             if (info.Monster.gameObject.activeInHierarchy)
             {
                 
-                m_Buffer.AppendObservation(GetOpponentData(info));
+                m_EnvBuffer.AppendObservation(GetOpponentData(info));
             }
         }
 
@@ -431,8 +466,9 @@ public class AdventurerAgent : Agent
 
         data[0] = 0f; // 0: Adventurer, 1: Monster 
         data[1] = Vector3.Dot(transform.forward, 
-                            info.Adventurer.gameObject.transform.position 
-                            - this.transform.position); // the direction of the teammates
+                            Vector3.Normalize(info.Adventurer.gameObject.transform.position 
+                            - this.transform.position)); // the direction of the teammates
+        // data[2] = Vector3.Distance(transform.localPosition, info.Adventurer.gameObject.transform.localPosition) / 20f;
         data[2] = (float)info.Adventurer.currentHealth / info.Adventurer.maxHealth;
         return data;
     }
@@ -443,8 +479,10 @@ public class AdventurerAgent : Agent
 
         data[0] = 1f; // 0: Adventurer, 1: Monster 
         data[1] = Vector3.Dot(transform.forward, 
-                            info.Monster.gameObject.transform.position 
-                            - this.transform.position); // the direction of the teammates
+                            Vector3.Normalize(info.Monster.gameObject.transform.position 
+                            - this.transform.position)); // the direction of the teammates
+        // Debug.Log(data[1]);
+        // data[2] = Vector3.Distance(transform.localPosition, info.Monster.gameObject.transform.localPosition) / 20f;
         data[2] = (float)info.Monster.currentHealth / info.Monster.maxHealth;
         return data;
     }
@@ -460,10 +498,13 @@ public class AdventurerAgent : Agent
         {
             m_IsDecisionStep = false;
             UseBasicAttack(actionBuffers);
-            UseItem(actionBuffers);
+            // UseItem(actionBuffers);
         }
         
-        StayAlive();
+        // StayAlive();
+
+        if (pushing)
+            PushBlocks();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -479,7 +520,7 @@ public class AdventurerAgent : Agent
             // Normal Attack
             discreteActionsOut[0] = agentControls.AttackIsTriggered() ? 1 : 0;
             // Item Usage
-            discreteActionsOut[1] = agentControls.GetItemIndex();
+            // discreteActionsOut[1] = agentControls.GetItemIndex();
         }
     }
 }

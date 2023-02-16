@@ -18,6 +18,8 @@ GameObject:
   - component: {fileID: 1365868058363982387}
   - component: {fileID: 1743907333319526909}
   - component: {fileID: 1281375478549025024}
+  - component: {fileID: 523897201}
+  - component: {fileID: 633332557}
   m_Layer: 0
   m_Name: Rogue
   m_TagString: Adventurer
@@ -87,11 +89,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 7
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 11
+    NumStackedVectorObservations: 2
     m_ActionSpec:
       m_NumContinuousActions: 3
-      BranchSizes: 0200000004000000
+      BranchSizes: 02000000
     VectorActionSize: 
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
@@ -124,8 +126,10 @@ MonoBehaviour:
   m_Class: 3
   canControl: 1
   turnSpeed: 300
-  moveSpeed: 4
+  moveSpeed: 5
+  currentSpeed: 2
   worth: 0.5
+  attack: 1
   maxHealth: 3
   isDead: 0
   axe: {fileID: 0}
@@ -133,6 +137,7 @@ MonoBehaviour:
   sword: {fileID: 0}
   shield: {fileID: 0}
   arrowPrefab: {fileID: 3638821168171941170}
+  pushingBlock: {fileID: 0}
 --- !u!114 &1740123138924115010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -392,12 +397,13 @@ MonoBehaviour:
   m_DetectableTags:
   - Adventurer
   - Monster
-  - Breakable
-  - Unbreakable
+  - Block
   - Item
+  - Goal
+  - Wall
   m_ColliderMask:
     serializedVersion: 2
-    m_Bits: 51
+    m_Bits: 1
   m_MaxColliderBufferSize: 500
   m_InitialColliderBufferSize: 4
   m_DebugColors:
@@ -405,7 +411,8 @@ MonoBehaviour:
   - {r: 0.48235297, g: 0.07450981, b: 0.1764706, a: 0}
   - {r: 0.29656518, g: 0.48235294, b: 0.07450979, a: 0}
   - {r: 0.3865175, g: 0.19479053, b: 0.46226418, a: 0}
-  - {r: 0.6320754, g: 0.400772, b: 0.15901265, a: 0}
+  - {r: 0.764151, g: 0.64487505, b: 0.14898534, a: 0}
+  - {r: 0.4245283, g: 0.41518334, b: 0.41518334, a: 0}
   m_GizmoYOffset: 0
   m_ShowGizmos: 0
   m_CompressionType: 1
@@ -433,6 +440,37 @@ MonoBehaviour:
     m_Flags: 0
   Size: 3
   inventoryItemsList: []
+--- !u!114 &523897201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7677691942469578676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: BufferSensor
+  m_ObservableSize: 3
+  m_MaxNumObservables: 15
+--- !u!114 &633332557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7677691942469578676}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Record: 0
+  NumStepsToRecord: 0
+  DemonstrationName: Rogue
+  DemonstrationDirectory: 
 --- !u!1001 &130303726417619254
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -698,7 +736,7 @@ BoxCollider:
   m_GameObject: {fileID: 3638821168171941170}
   m_Material: {fileID: 0}
   m_IsTrigger: 1
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 0.3, y: 0.2, z: 0.1}
   m_Center: {x: 0, y: 0, z: 0.25}

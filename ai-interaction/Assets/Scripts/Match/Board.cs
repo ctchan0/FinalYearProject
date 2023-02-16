@@ -34,6 +34,7 @@ public class Board : MonoBehaviour
     public int numberOfBlocks;
     public bool gameOver = false;
     public bool enableSpawner = false;
+    public bool autoSpawner = true;
     private bool canSpawn = false;
     public bool active = true;
     public int spawnInterval = 3;
@@ -112,8 +113,13 @@ public class Board : MonoBehaviour
         if (enableSpawner)
         {
             blockManager.AllBlocksMoveUp(1);
-            // SpawnMonsterInAuto(1); // should always turn canSpawn to be true
-            StartCoroutine(SpawnMonster());
+            if (autoSpawner)
+            {
+                SpawnMonsterInAuto(1); // should always turn canSpawn to be true
+                this.activePiece.StartAdventurerTurn();
+            }
+            else
+                StartCoroutine(SpawnMonster());
         }
         else
             this.activePiece.StartAdventurerTurn();

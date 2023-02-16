@@ -62,30 +62,22 @@ public class EnvController : MonoBehaviour
     /// The ground. The bounds are used to spawn the elements.
     /// </summary>
     public GameObject ground;
+    public float size = 2f; // size of ground
     Material m_GroundMaterial; //cached on Awake()
     Renderer m_GroundRenderer;
+    public GameObject goal;
 
     private GameSetting m_GameSetting;
     public bool UseRandomAgentRotation = true;
     public bool UseRandomAgentPosition = true;
+    // private bool ready = false;
 
     public GridLayout m_GridLayout;
     private Grid grid;
 
-    public List<int> colorLists = new List<int>();
+    public List<GoalDetectTrigger> blockLists = new List<GoalDetectTrigger>();
     public PieceAgent activePiece;
-    public void AddPushedBlock(PushBlock block)
-    {
-        colorLists.Add(block.color);
-        m_AdventurerGroup.AddGroupReward(0.25f);
-        if (colorLists.Count == 4)
-        {
-            GatherAllResources();
-            Debug.Log("A Trap is available for initialization");
-            // Reset and then give to the piece agent
-            activePiece.StartNewTurn(colorLists); 
-        }
-    }
+    
     public List<InventoryItem> ItemCollectionList = new List<InventoryItem>(); // adventurers need to fulfil the list reuirement to win
     public List<InventoryItem> ItemInitiatorList = new List<InventoryItem>(); // items provided at the start
 
@@ -97,6 +89,7 @@ public class EnvController : MonoBehaviour
     public int m_NumberOfRemainingMonsters { get; set; }
     public int m_NumberOfRemainingResources { get; set; }
     public GameObject resource; // to gather all resources together
+    public GameObject monsterPrefab;
     private SimpleMultiAgentGroup m_AdventurerGroup;
     private SimpleMultiAgentGroup m_MonsterGroup;
     void Start()
@@ -159,52 +152,48 @@ public class EnvController : MonoBehaviour
             m_MonsterGroup.GroupEpisodeInterrupted();
             StartCoroutine(ResetScene());
         }
+        if (m_ResetTimer % 1000 == 0) // Adventurers: hold blocks within goal area
+        {
+            AddGroupReward(0, (float)blockLists.Count / 4);
+        }
 
         // Hurry Up Penalty
-        m_MonsterGroup.AddGroupReward(-0.5f / MaxEnvironmentSteps);
+        // m_MonsterGroup.AddGroupReward(-0.5f / MaxEnvironmentSteps);
         m_AdventurerGroup.AddGroupReward(-0.5f / MaxEnvironmentSteps);
     }
 
-    void Update()
-    {
-        
-    }
-
-    /// <summary>
-    /// Use the ground's bounds to pick a random spawn position.
-    /// </summary>
-    public Vector3 GetRandomSpawnPos()
+    #region Random Spawn
+    public Vector3 GetRandomSpawnPos(Bounds bounds)
     {
         var foundNewSpawnLocation = false;
         var randomSpawnPos = Vector3.zero;
         while (foundNewSpawnLocation == false)
         {
-            var randomPosX = Random.Range(-areaBounds.extents.x * m_GameSetting.spawnAreaMarginMultiplier,
-                areaBounds.extents.x * m_GameSetting.spawnAreaMarginMultiplier);
+            var randomPosX = Random.Range(-bounds.extents.x * m_GameSetting.spawnAreaMarginMultiplier,
+                bounds.extents.x * m_GameSetting.spawnAreaMarginMultiplier);
 
-            var randomPosZ = Random.Range(-areaBounds.extents.z * m_GameSetting.spawnAreaMarginMultiplier,
-                areaBounds.extents.z * m_GameSetting.spawnAreaMarginMultiplier);
+            var randomPosZ = Random.Range(-bounds.extents.z * m_GameSetting.spawnAreaMarginMultiplier,
+                bounds.extents.z * m_GameSetting.spawnAreaMarginMultiplier);
             randomSpawnPos = ground.transform.position + new Vector3(randomPosX, 1f, randomPosZ);
 
-            if (Physics.CheckBox(randomSpawnPos, new Vector3(0.5f, 0.01f, 0.5f)) == false)
+            if (Physics.CheckBox(randomSpawnPos, new Vector3(2.5f, 0.01f, 2.5f)) == false) // ensure there is a distance from others
             {
                 foundNewSpawnLocation = true;
             }
         }
         return SnapCoordinateToGrid(randomSpawnPos);
     }
-
     public Vector3 SnapCoordinateToGrid(Vector3 position)
     {
         Vector3Int cellPos = m_GridLayout.WorldToCell(position);
         return grid.GetCellCenterWorld(cellPos);
     }
-
     Quaternion GetRandomRot()
     {
         return Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0);
     }
-
+    #endregion
+    
     private IEnumerator ResetScene() 
     {
         yield return new WaitForSeconds(0.5f); // give more time to prepare new scene
@@ -232,7 +221,7 @@ public class EnvController : MonoBehaviour
         // Reset Agents
         foreach (var item in AdventurersList)
         {
-            var pos = UseRandomAgentPosition ? GetRandomSpawnPos() : item.StartingPos;
+            var pos = UseRandomAgentPosition ? GetRandomSpawnPos(areaBounds) : item.StartingPos;
             var rot = UseRandomAgentRotation ? GetRandomRot() : item.StartingRot;
             item.Adventurer.transform.SetPositionAndRotation(pos, rot);
 
@@ -247,7 +236,7 @@ public class EnvController : MonoBehaviour
         // Reset Monsters
         foreach (var item in MonstersList)
         {
-            var pos = UseRandomAgentPosition ? GetRandomSpawnPos() : item.StartingPos;
+            var pos = UseRandomAgentPosition ? GetRandomSpawnPos(areaBounds) : item.StartingPos;
             var rot = UseRandomAgentRotation ? GetRandomRot() : item.StartingRot;
             item.Monster.transform.SetPositionAndRotation(pos, rot);
 
@@ -262,7 +251,7 @@ public class EnvController : MonoBehaviour
         // Reset Resources
         foreach (var item in ResourcesList)
         {
-            var pos = UseRandomAgentPosition ? GetRandomSpawnPos() : item.StartingPos;
+            var pos = UseRandomAgentPosition ? GetRandomSpawnPos(areaBounds) : item.StartingPos;
             var rot = item.StartingRot;
             item.Resource.transform.SetPositionAndRotation(pos, rot);
 
@@ -270,32 +259,25 @@ public class EnvController : MonoBehaviour
                 breakableObject.Respawn();
             else if (item.Resource.TryGetComponent<Chest>(out Chest chest))
                 chest.Reset();
+            else if (item.Resource.TryGetComponent<GoalDetectTrigger>(out GoalDetectTrigger pushBlock))
+                pushBlock.Reset();
         }
 
         foreach (var item in ItemInitiatorList)
         {
             if (!item.IsEmpty)
             {
-                var i = Instantiate(item.item.ItemPrefab, GetRandomSpawnPos(), GetRandomRot());
+                var i = Instantiate(item.item.ItemPrefab, GetRandomSpawnPos(areaBounds), GetRandomRot());
                 i.transform.SetParent(this.transform); // remember to set parent to the corresponding environment
                 i.GetComponent<Item>().Quantity = item.quantity;
             }
         }
 
-        colorLists = new List<int>();
+        blockLists = new List<GoalDetectTrigger>();
         // StartCoroutine(CheckAllResourcesGathered(1f));
     }
 
-    /// <summary>
-    /// Swap ground material, wait time seconds, then swap back to the regular material.
-    /// </summary>
-    IEnumerator GoalScoredSwapGroundMaterial(Material mat, float time)
-    {
-        m_GroundRenderer.material = mat;
-        yield return new WaitForSeconds(time); // Wait for 2 sec
-        m_GroundRenderer.material = m_GroundMaterial;
-    }
-
+    #region Item Collection
     IEnumerator CheckAllResourcesGathered(float checkTimeInterval)
     {
         while(true)
@@ -331,10 +313,52 @@ public class EnvController : MonoBehaviour
         return false;
     }
 
+    #endregion
+    
+    #region Block Collection
+    public void GetABlock(GoalDetectTrigger block, float score)
+    {
+        print($"Scored {score} on {gameObject.name}");
+
+        blockLists.Add(block);
+
+        AddGroupReward(0, score);
+        AddGroupReward(1, -score);
+
+        if (blockLists.Count == 4)
+        {
+            List<int> colorList = new List<int>();
+            foreach (var b in blockLists)
+            {
+                colorList.Add(b.color);
+                b.Destroy();
+            }
+            blockLists.Clear();
+            GatherAllResources();
+            // Debug.Log("A Trap is available for initialization");
+    
+            // Reset and then give to the piece agent
+            if (activePiece)
+                activePiece.StartNewTurn(colorList); 
+        }
+    }
+
+    public void MissABlock(GoalDetectTrigger block, float score)
+    {
+        blockLists.Remove(block);
+
+        AddGroupReward(0, -score);
+        AddGroupReward(1, score);
+
+        if (blockLists.Count < 0)
+            Debug.Log("Invalid number of push blocks ");
+    }
+    #endregion
+
     public void GatherAllResources() // adventurers win
     {
-        m_AdventurerGroup.AddGroupReward(0.5f);
-        m_MonsterGroup.AddGroupReward(-0.5f);
+        m_AdventurerGroup.AddGroupReward(1f);
+        m_MonsterGroup.AddGroupReward(-1f);
         StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.goalScoredMaterial, 0.5f));
 
         print("Gather all resources");
@@ -344,6 +368,7 @@ public class EnvController : MonoBehaviour
         StartCoroutine(ResetScene());
     }
 
+    #region Team state
     public void AceGroup(int teamId) 
     {
         if (teamId == 0) // adventurer's team
@@ -359,8 +384,8 @@ public class EnvController : MonoBehaviour
         }
         else if (teamId == 1) // monster's team
         {
-            m_MonsterGroup.AddGroupReward(-0.5f);
-            m_AdventurerGroup.AddGroupReward(0.5f);
+            m_MonsterGroup.AddGroupReward(-1f);
+            m_AdventurerGroup.AddGroupReward(1f);
             StartCoroutine(GoalScoredSwapGroundMaterial(m_GameSetting.goalScoredMaterial, 0.5f));
             // print("All Monsters are dead");
         }
@@ -371,23 +396,74 @@ public class EnvController : MonoBehaviour
         {
             m_NumberOfRemainingAdventurers--;
             character.SetActive(false);
+            AddGroupReward(1, 0.5f);
             
-            if (m_NumberOfRemainingAdventurers <= 1)
-            {
+            if (m_NumberOfRemainingAdventurers == 0)
                 AceGroup(0);
-            }
         }
         else if (character.TryGetComponent<MonsterAgent>(out MonsterAgent monster))
         {
             m_NumberOfRemainingMonsters--;
             character.SetActive(false);
+            AddGroupReward(0, 0.5f);
             
             if (m_NumberOfRemainingMonsters == 0)
-            {
                 AceGroup(1);
+        }
+    }
+
+    public void SpawnMonster()
+    {
+        m_NumberOfRemainingMonsters++;
+        /* Spawn monsters from goal point */
+        var monster = Instantiate(monsterPrefab, GetRandomSpawnPos(goal.GetComponent<Collider>().bounds), GetRandomRot());
+    }
+    #endregion
+
+    #region Upgrade
+    public void GetCure()
+    {
+        foreach (var item in AdventurersList)
+        {
+            if (!item.Adventurer.isDead)
+            {
+                item.Adventurer.GetCure(1);
             }
         }
     }
+
+    public void GetStrength()
+    {
+        foreach (var item in AdventurersList)
+        {
+            if (!item.Adventurer.isDead)
+            {
+                StartCoroutine(TemporaryUpgrade(item.Adventurer, item.Rb.mass, 0.5f, 3f));
+            }
+        }
+    }
+
+    public void GetSpeed()
+    {
+        foreach (var item in AdventurersList)
+        {
+            if (!item.Adventurer.isDead)
+            {
+                StartCoroutine(TemporaryUpgrade(item.Adventurer, item.Adventurer.currentSpeed, 0.5f, 3f));
+                StartCoroutine(TemporaryUpgrade(item.Adventurer, item.Adventurer.turnSpeed, 50f, 3f));
+            }
+        }
+    }
+
+    IEnumerator TemporaryUpgrade(AdventurerAgent adventurer, float value, float increment, float time)
+    {
+        value = value + increment;
+        yield return new WaitForSeconds(time);
+        if (!adventurer.isDead)
+            value = value - increment;
+    }
+
+    #endregion
 
     public void AddGroupReward(int teamId, float point)
     {
@@ -405,15 +481,10 @@ public class EnvController : MonoBehaviour
         }
     }
 
-    public void HealingGroup()
+    IEnumerator GoalScoredSwapGroundMaterial(Material mat, float time)
     {
-        foreach (var item in AdventurersList)
-        {
-            if (!item.Adventurer.isDead)
-            {
-                item.Adventurer.GetCure(1);
-            }
-        }
+        m_GroundRenderer.material = mat;
+        yield return new WaitForSeconds(time); // Wait for 2 sec
+        m_GroundRenderer.material = m_GroundMaterial;
     }
-
 }

@@ -66,8 +66,6 @@ public class BreakableObject : MonoBehaviour
                 var item = Instantiate(resources[n], 
                             transform.position + resources[n].transform.position, 
                             Quaternion.identity);
-                item.GetComponent<PushBlock>().env = m_EnvController;
-                item.GetComponent<PushBlock>().color = n;
                 item.transform.SetParent(m_EnvController.resource.transform);
             }
             else 

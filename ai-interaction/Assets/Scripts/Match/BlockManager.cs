@@ -282,8 +282,8 @@ public class BlockManager
             }
 
             TranslateBlock(index, newIndex);
-
-            variedBlocks.Enqueue(newIndex);
+            if (index != newIndex)
+                variedBlocks.Enqueue(newIndex);
 
             index += colSize; // check the next upper block
         }
@@ -380,6 +380,8 @@ public class BlockManager
             {
                 foreach (var blockIndex in match)
                 {
+                    if (this.blocks[blockIndex].TryGetComponent(out MonsterBlock m))
+                        numberOfEliminatedMonsters++;
                     RemoveMatchBlock(blockIndex);
                     matchedBlocks.Add(blockIndex);
                 }
