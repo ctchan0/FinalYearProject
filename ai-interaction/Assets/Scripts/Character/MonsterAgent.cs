@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 public class MonsterAgent : Agent
 {
-    private EnvController m_EnvController;
+    public EnvController m_EnvController;
     EnvironmentParameters m_ResetParams;
 
     private Animator m_Animator;
@@ -26,6 +26,7 @@ public class MonsterAgent : Agent
     public int currentHealth { get; set;}
     public bool isDead = false;
     private HealthBar m_HealthBar;
+    public int color;
 
     public override void Initialize()
     {
@@ -75,9 +76,10 @@ public class MonsterAgent : Agent
         }
     }
 
-    public void ResetHealth()
+    public void Reset()
     {
-        currentHealth = maxHealth;
+        this.gameObject.SetActive(true);
+        SetHealth();
         isDead = false;
     }
 
@@ -148,7 +150,7 @@ public class MonsterAgent : Agent
         if (other.gameObject.CompareTag("Sword") || other.gameObject.CompareTag("Axe"))
         {
             var adventurerAgent = other.gameObject.transform.parent.GetComponent<AdventurerAgent>();
-            adventurerAgent.DealDamage(this, adventurerAgent.attack);
+            adventurerAgent.DealDamage(this, adventurerAgent.currentAttack);
         }
     }
 

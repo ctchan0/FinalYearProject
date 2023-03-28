@@ -15,7 +15,7 @@ public class Projectile : MonoBehaviour
     void Start()
     {
         // Destroy once shoot
-        Destroy(this.gameObject, 5f);
+        Destroy(this.gameObject, 1.5f);
     }
 
     // Update is called once per frame
@@ -28,11 +28,14 @@ public class Projectile : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Monster"))
         {
+            // Debug.Log("detect");
             var monster = other.gameObject.GetComponent<MonsterAgent>();
             belonger.HitTarget();
-            belonger.DealDamage(monster, belonger.attack);
+            belonger.DealDamage(monster, belonger.currentAttack);
+            Destroy(this.gameObject);
         }
-        else if (other.gameObject.CompareTag("Wall"))
+        
+        if (other.gameObject.CompareTag("Wall"))
         {
             Destroy(this.gameObject);
         }

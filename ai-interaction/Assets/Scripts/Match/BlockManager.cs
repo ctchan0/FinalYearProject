@@ -11,6 +11,7 @@ public class BlockManager
     private readonly Board board; // temporary control should not have the board attribute
     private readonly int rowSize;
     private readonly int colSize;
+    private int outBoundLevel = 15;
 
     public BlockManager(Board board, int rowSize, int colSize)
     {
@@ -108,7 +109,7 @@ public class BlockManager
                     continue;
 
                 int newIndex = GetBlockIndexAt(i + degreeOfRow, j);
-                if (newIndex >= blocks.Length) // destroy the block out of bound after move
+                if (newIndex >= this.colSize * outBoundLevel) // destroy the block out of bound after move
                 {
                     RemoveOutBoundBlock(index);
                     continue;
@@ -123,12 +124,12 @@ public class BlockManager
     public void AllBlocksMoveUpStartFrom(int index)
     {
         int start = index;
-        while (index < blocks.Length && blocks[index] != null) // check the top empty space
+        while (index < this.colSize * outBoundLevel && blocks[index] != null) // check the top danger space
         {
             index += colSize;
         }
 
-        if (index >= blocks.Length) // if exceed the top bound
+        if (index >= this.colSize * outBoundLevel) // if exceed the top bound
         {
             index -= colSize;
             RemoveOutBoundBlock(index);
@@ -207,16 +208,40 @@ public class BlockManager
         }  
     }
 
+    public void CheckOutBoundBlocks()
+    {
+        for (int i = colSize * outBoundLevel; i < blocks.Length; i++)
+        {
+            if (blocks[i] != null)
+            {
+                RemoveOutBoundBlock(i);
+            }
+        }
+    }
+
     public void RemoveOutBoundBlock(int index)
     {
+        if (blocks[index] == null)
+        {
+            Debug.Log("null index");
+            return;
+        }
+        this.board.activePiece.MissABlock();
+
         if (board)
         {
             if (blocks[index].type == BlockType.monster)
                 board.numberOfMonsters--;
-            board.DestroyBlock(blocks[index]);
-
             var block = blocks[index];
-            outBoundBlocks.Add(block);
+
+            if (this.board.independentPlay)
+                outBoundBlocks.Add(block);
+            else
+            {
+                this.board.activePiece.m_EnvController.SpawnMonster(block.colour);
+            }
+
+            board.DestroyBlock(blocks[index]);
         }
         blocks[index] = null;
     }

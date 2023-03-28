@@ -69,6 +69,7 @@ MonoBehaviour:
   MaxStep: 0
   m_EnvController: {fileID: 0}
   humanPlayable: 0
+  basic: 1
   isRandom: 0
   hasMark: 0
   board: {fileID: 0}
@@ -96,12 +97,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 5007
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 448
+    NumStackedVectorObservations: 2
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 20030000
-    VectorActionSize: 20030000
+      BranchSizes: 28000000
+    VectorActionSize: 28000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1

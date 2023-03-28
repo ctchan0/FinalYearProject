@@ -9,6 +9,6 @@ EditorBuildSettings:
     path: Assets/Scenes/StartMenu.unity
     guid: ff30c226d082c13419a4c3a350975465
   - enabled: 1
-    path: Assets/Scenes/Main.unity
-    guid: 1e5503985cd2aba4d96d6b6dedee9f62
+    path: Assets/Scenes/DungeonMatch.unity
+    guid: a94abe977c8b0864580f6914e07a09b1
   m_configObjects: {}

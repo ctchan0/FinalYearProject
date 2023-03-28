@@ -35,9 +35,12 @@ public class Board : MonoBehaviour
     public bool gameOver = false;
     public bool enableSpawner = false;
     public bool autoSpawner = true;
+    public int numberOfMonstersEachWave = 3;
     private bool canSpawn = false;
-    public bool active = true;
-    public int spawnInterval = 3;
+    public bool independentPlay = true;
+    public int spawnInterval = 15000;
+    private bool spawnTrigger = false;
+    private int m_ResetTimer;
 
     private void Awake()
     {
@@ -49,6 +52,22 @@ public class Board : MonoBehaviour
         for (int i = 0; i < this.traps.Length; i++)
         {
             this.traps[i].Initialize();
+        }
+    }
+
+    private void FixedUpdate() 
+    {
+        if (!gameOver)
+            m_ResetTimer += 1;
+
+        if (m_ResetTimer != 0 && m_ResetTimer % spawnInterval == 0)
+        {
+            spawnTrigger = true;
+        }
+        if (!activePiece.inactive && spawnTrigger)
+        {
+            spawnTrigger = false;
+            StartMonsterTurn();
         }
     }
 
@@ -81,6 +100,8 @@ public class Board : MonoBehaviour
         }
         numberOfBlocks = 0;
         numberOfMonsters = 0;
+        m_ResetTimer = 0;
+        spawnTrigger = false;
         gameOver = false;
 
         yield return new WaitForSeconds(1f);
@@ -116,13 +137,14 @@ public class Board : MonoBehaviour
             if (autoSpawner)
             {
                 SpawnMonsterInAuto(1); // should always turn canSpawn to be true
-                this.activePiece.StartAdventurerTurn();
+                // if (this.active)
+                //    this.activePiece.StartAdventurerTurn();
             }
             else
                 StartCoroutine(SpawnMonster());
         }
-        else
-            this.activePiece.StartAdventurerTurn();
+        // else
+        //    this.activePiece.StartAdventurerTurn();
         /*
         List<MonsterBlock> mBlocks = new List<MonsterBlock>();
         foreach (var block in blockManager.blocks)
@@ -181,12 +203,17 @@ public class Board : MonoBehaviour
 
     public void SpawnMonsterInAuto(int numOfRow)
     {
-        for (int i = 0; i < numOfRow * boardWidth; i++)
+        List<int> numberList = new List<int>();
+        for (int i = 0; i < boardWidth; i++)
+            numberList.Add(i);
+
+        for (int i = 0; i < numberOfMonstersEachWave; i++)
         {
-            int spawn = Random.Range(0, 2);
-            if (spawn == 0) 
-                continue; // chance of not spawning
-            SpawnMonsterAt(i, -1);
+            int index = Random.Range(0, numberList.Count);
+            int spawn = numberList[index];
+            numberList.RemoveAt(index);
+
+            SpawnMonsterAt(spawn, -1);
         }
         activePiece.ghost.UpdatePos();
     }
@@ -265,9 +292,11 @@ public class Board : MonoBehaviour
         /* No match and drop anymore */
         if (matchSeq.Count == 0) 
         {
-            if (!gameOver && active)
+            activePiece.inactive = false;
+            if (!gameOver && independentPlay) // if it is independent, end until no move (win condition depends on itself)
                 activePiece.StartNewTurn();
-
+            else
+                this.blockManager.CheckOutBoundBlocks(); // else, create space for next move (win condition depends on battlefield)
             return;
         }
 

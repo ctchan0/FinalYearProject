@@ -220,8 +220,11 @@ public class PieceAgent : Agent
     // private int m_Move;
     // private int m_Rotate; 
     // private bool validMove = true;
+    public bool basic = true;
     public bool isRandom = false;
     public bool hasMark = true;
+    public float moveSpeed = 0.2f;
+    public bool inactive = false; // there is no trap at this moment if return false
 
     /* Trap */
     // private BufferSensorComponent m_TrapBuffer;
@@ -297,13 +300,14 @@ public class PieceAgent : Agent
         m_SpawningRange = (int)m_ResetParams.GetWithDefault("spawn_range", DefaultSpawningRange);
         board.SpawnMonsterInAuto(m_SpawningRange);
     
-        if (board.active)
+        if (board.independentPlay) // if not active, need to be triggered by battlefield
             StartNewTurn();
-        else 
-            Debug.Log("Board is not active now!!!");
+        //else 
+            // Debug.Log("Board is not active now!!!");
     }
     public void StartNewTurn(List<int> colorList = null)
     {
+        inactive = true;
         ResetTrap();
 
         if (Turn != 0)
@@ -311,10 +315,10 @@ public class PieceAgent : Agent
         ConsumeOneTurn();
         Turn++;
 
-        if (Turn % board.spawnInterval == 0)
-            board.StartMonsterTurn();
-        else
-            StartAdventurerTurn(colorList);
+        // if (board.enableSpawner && Turn % board.spawnInterval == 0)
+            // board.StartMonsterTurn();
+        // else
+        StartAdventurerTurn(colorList);
     }
 
     public void StartAdventurerTurn(List<int> colorList = null)
@@ -330,20 +334,6 @@ public class PieceAgent : Agent
             Debug.Log("Trap " + spawnTrap + " is created!");
         }
 
-        /* Check win & lose condition */
-        int state = GetConditionState();
-        if (state == 0)
-            CreateTrap(colorList);
-        if (state == 1)
-            this.board.GameOver(true);
-        if (state == -1)
-            this.board.GameOver(false);
-    }
-
-    public int GetConditionState()
-    {
-        // Debug.Log("Checking game conditions...");
-
         /* Construct the route of new trap first */
         this.route = new Vector3Int[trapData.route.Length];
         for (int i = 0; i < trapData.route.Length; i++) 
@@ -351,15 +341,36 @@ public class PieceAgent : Agent
             this.route[i] = new Vector3Int(trapData.route[i].x, 0, trapData.route[i].y);
         }
 
+        /* Check win & lose condition */
+        if (board.independentPlay)
+        {
+            int state = GetConditionState();
+            if (state == 0)
+                CreateTrap(colorList);
+            if (state == 1)
+                this.board.GameOver(true);
+            if (state == -1)
+                this.board.GameOver(false);
+        }
+        else
+        {
+            CreateTrap(colorList);
+        }
+    }
+
+    public int GetConditionState()
+    {
+        // Debug.Log("Checking game conditions...");
+
         // no space to put new trap
         if (!this.board.IsValidPos(spawnPosition, this.route))
         {
-            Debug.Log("Cannot put new trap anymore at " + spawnPosition);
+            // Debug.Log("Cannot put new trap anymore at " + spawnPosition);
             return -1;
         }
         else if (this.board.blockManager.outBoundBlocks.Count > 0)
         {
-            Debug.Log("Monsters is reaching");
+            // Debug.Log("Monsters is reaching");
             return -1;
         }
         else if (board.numberOfMonsters == 0)
@@ -447,7 +458,7 @@ public class PieceAgent : Agent
 
         return cols;
     }
-    public List<Location> GetAllBaseLocations(Trap trapData)
+    public List<Location> GetAllBaseLocations(Trap trapData, Location startLoc)
     {
         var locations = new List<Location>();
         var route = new Vector3Int[trapData.route.Length];
@@ -456,30 +467,29 @@ public class PieceAgent : Agent
             route[i] = new Vector3Int(trapData.route[i].x, 0, trapData.route[i].y);
         }
 
+        int n = 0;
         for (int rotIndex = 0;  rotIndex < trapData.route.Length; rotIndex++)
         {
             for (int col = 0; col < board.boardWidth; col++)
             {
                 Vector3Int pos = FindBottomFrom(col, route);
+                Location loc = new Location(this.board, pos, route, rotIndex, MatchEvaluation.GetEmpty());
                 
-                if (pos.z != -1) // if pos is valid
+                if (pos.z != -1 && GetOptimalPath(trapData, startLoc, loc) != null) // if pos is valid
                 {
                     MatchEvaluation score = new MatchEvaluation();
                     var scanner = new BlockManager(null, board.boardDepth, board.boardWidth);
                     score = scanner.GetMatchEvaluationAt(this, pos, route);
-                    Location loc = new Location(this.board, pos, route, rotIndex, score);
-                    locations.Add(loc);
+                    loc.AssignValue(score);
                     // Debug.Log("RotIndex " + rotIndex + ", Col " + col + ": " + pos);
                     // score.PrintInformation();
                     // if (match.Count != 0 && match[match.Count - 1] != 0)
                     //    Debug.Log("Number of elimanated monsters: " + match[match.Count - 1]);
                     // Debug.Log(ghost.HasAMatch(match));
+                    possibleIndex.Add(n);
                 }
-                else
-                {
-                    Location loc = new Location(this.board, pos, route, rotIndex, MatchEvaluation.GetEmpty());
-                    locations.Add(loc);
-                }      
+                locations.Add(loc);
+                n++;
             }
 
             // Continue to next rotation shape
@@ -539,7 +549,12 @@ public class PieceAgent : Agent
     private void MakeDecision()
     {
         start = new Location(this.board, spawnPosition, this.route, 0, MatchEvaluation.GetEmpty());
-        locations = GetAllPossibleGoalLocations(trapData, start);
+
+        if (basic)
+            locations = GetAllBaseLocations(trapData, start);
+        else
+            locations = GetAllPossibleGoalLocations(trapData, start);
+        
         //Debug.Log("Total number of locations: " + locations.Count);
         //locations = GetAllBaseLocations(trapData);
 
@@ -555,11 +570,20 @@ public class PieceAgent : Agent
         for (int i = 0; i < 200; i++)
         {
             if (blocks[i] == null)
-                blockManager.Add(0f);
+            {
+                blockManager.Add(1f);
+            }
             else
             {
-                
-                blockManager.Add(1f);
+                if (blocks[i].TryGetComponent(out MonsterBlock m))
+                {
+                    blockManager.Add(-1f);
+                    // print(i);
+                }
+                else
+                {
+                    blockManager.Add(0f);
+                }
             }
         }
 
@@ -596,7 +620,7 @@ public class PieceAgent : Agent
             /* Includes all possible locations, which has a total number of 10 x 20 x 4 = 800 */
             for (int i = 0; i < locations.Count; i++)
             {
-                if (!locations[i]._score.Exists)
+                if (!possibleIndex.Contains(i))
                 {
                     // Debug.Log("Invalid " + i);
                     actionMask.SetActionEnabled(0, i, false);
@@ -650,7 +674,7 @@ public class PieceAgent : Agent
             if (n < 0 || n >= possibleIndex.Count)
                 Debug.Log("Invalid input"); */
 
-            if (possibleIndex.Count < 2)
+            if (possibleIndex.Count < 1)
             {
                 Debug.Log("There are no choices available");
                 StartCoroutine(Push());
@@ -680,6 +704,7 @@ public class PieceAgent : Agent
 
                     /* Get the path and start to move */
                     var path = GetOptimalPath(trapData, start, selectedLoc);
+
                     StartCoroutine(MoveTrap(path));
                 }
                 else
@@ -777,19 +802,19 @@ public class PieceAgent : Agent
 
         while (paths.Count > 0)
         {
-            // get the path with the lowest cost (i.e. optimal path)
+            // get the path with the lowest cost f(n)
             var optimalPath = paths.RemoveFirst();
             
             // get the current state and add to the visited list
             var currentState = optimalPath.GetLastState();
             visited.Add(currentState._location);
 
-            // check if current state is the goal 
+            // check if current state of this lowest cost path is the goal 
             if (currentState._location.Equal(endLoc))
             {
                 optimalPath.path.RemoveAt(0); // remove the first state (i.e. start) since it has no actions
                 foreach (var s in optimalPath.path)
-                    actions.Add(s._action);
+                    actions.Add(s._action); // construct the action map
                 paths.Clear();
                 return actions;
             }
@@ -798,7 +823,7 @@ public class PieceAgent : Agent
             {
                 if (nextState._location._pos.z < endLoc._pos.z || nextState._location.ContainIn(visited))
                     continue;
-                // construct new path with successors (need deep copy!!!)
+                // construct new path with successors i.e. next state
                 var newPath = new Path(optimalPath.path);
                 newPath.Add(nextState);
 
@@ -808,7 +833,7 @@ public class PieceAgent : Agent
 
         // Debug.Log("There is no optimal path");
         paths.Clear();
-        return null; // actions will be none if cannot reach the goal
+        return null; // actions will be none if goal is unreachable
     }
 
     List<State> GetNextStates(Trap trapData, Location loc, Location endLoc)
@@ -904,7 +929,7 @@ public class PieceAgent : Agent
                         Debug.Log("Cannot move the trap!");
                         break;
                 }
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(moveSpeed);
             }
             // Debug.Log("Trap is placed");
             Place();
@@ -1087,7 +1112,7 @@ public class PieceAgent : Agent
     public void HasAMatch(int matchCount)
     {
         totalMatch += matchCount;
-        // AddReward(matchCount / board.boardWidth * board.boardDepth);
+        AddReward(matchCount / board.boardWidth * board.boardDepth);
     }
     public void LinkUpBlock(int type)
     {
@@ -1120,7 +1145,12 @@ public class PieceAgent : Agent
 
     public void ConsumeOneTurn()
     {
-        AddReward(-0.01f);
+        AddReward(-0.02f);
+    }
+
+    public void MissABlock()
+    {
+        AddReward(-0.5f);
     }
     #endregion
 
@@ -1130,8 +1160,9 @@ public class PieceAgent : Agent
         
         sensor.AddOneHotObservation((int)trapData.shape, 7); // 7 represents the size of trap type enum
         // sensor.AddObservation(isMonochrome);
-        sensor.AddObservation(StatesOfLoc);
-        sensor.AddObservation(blockManager);
+        // sensor.AddObservation(this.board.numberOfMonsters);
+        sensor.AddObservation(StatesOfLoc); // length 40 if basic
+        // sensor.AddObservation(blockManager);
         /*
         foreach (var loc in locations)
         {

@@ -17,9 +17,11 @@ public class GoalDetectTrigger : MonoBehaviour
     public GameObject crate;
 
     public bool toGoal = false;
-    public float optiDistance;
+    public float distance;
 
     private Collider m_col;
+    private EnvController m_EnvController;
+
     [System.Serializable]
     public class TriggerEvent : UnityEvent<GoalDetectTrigger, float>
     {
@@ -33,10 +35,17 @@ public class GoalDetectTrigger : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        m_EnvController = GetComponentInParent<EnvController>();
         m_col = GetComponent<Collider>();
         m_col.enabled = false;
         toGoal = false;
-        this.gameObject.SetActive(false);
+    }
+
+    void FixedUpdate()
+    {
+        // Hurry Up Penalty
+        if (!toGoal)
+            m_EnvController.AddGroupReward(0, -0.25f / m_EnvController.MaxEnvironmentSteps);
     }
 
     /* Detect Goal */
@@ -93,16 +102,16 @@ public class GoalDetectTrigger : MonoBehaviour
         m_col.enabled = false;
     }
 
-    public void Reset()
+    public void Reset(int color)
     {
         this.gameObject.SetActive(true);
         m_col.enabled = true;
         toGoal = false;
-        optiDistance = Vector3.Distance(this.goal.transform.localPosition, 
+        distance = Vector3.Distance(this.goal.transform.localPosition, 
                                     this.transform.localPosition);
 
         var renderer = crate.GetComponent<MeshRenderer>();
-        color = Random.Range(0, 3);
+        this.color = color;
         switch (color)
         {
             case 0:
