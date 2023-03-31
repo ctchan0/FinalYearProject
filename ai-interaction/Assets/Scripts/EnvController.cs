@@ -130,8 +130,9 @@ public class EnvController : MonoBehaviour
                 default: 
                     break;
             }
-           
-          
+
+            initMonsters = MainManager.Instance.initN;
+            hasMonstersWave = MainManager.Instance.hasWave;
         }
 
         m_NumberOfRemainingAdventurers = 4; // allow at most 4 adventurers in the battlefield

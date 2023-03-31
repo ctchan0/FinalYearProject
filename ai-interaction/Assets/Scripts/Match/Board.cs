@@ -53,6 +53,11 @@ public class Board : MonoBehaviour
         {
             this.traps[i].Initialize();
         }
+
+        if (GameObject.Find("MainManager"))
+        {
+            spawnInterval = MainManager.Instance.spawnT;
+        }
     }
 
     private void FixedUpdate() 

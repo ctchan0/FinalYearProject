@@ -2573,7 +2573,8 @@ MonoBehaviour:
   gameOver: 0
   enableSpawner: 0
   autoSpawner: 0
-  active: 1
+  numberOfMonstersEachWave: 3
+  independentPlay: 1
   spawnInterval: 15000
 --- !u!1 &86626013124011863
 GameObject:
@@ -3269,6 +3270,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 86626013379621647}
     m_Modifications:
+    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
+      propertyPath: m_Model
+      value: 
+      objectReference: {fileID: 5022602860645237092, guid: 0c361fc52b80fb942a2b53e8e927a124, type: 3}
+    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 247
+      objectReference: {fileID: 0}
+    - target: {fileID: 1607194804869069436, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
+      propertyPath: m_BrainParameters.NumStackedVectorObservations
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3176532770943899201, guid: 455c1905fe3a01d4f8d577fb5fff3d9b, type: 3}
       propertyPath: m_Name
       value: PieceAgent

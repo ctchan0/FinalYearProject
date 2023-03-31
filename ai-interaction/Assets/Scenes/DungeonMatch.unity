@@ -572,6 +572,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5490887896159423324, guid: 972c81e8bd3b8824b867df2656930f87, type: 3}
+      propertyPath: initMonsters
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6395179683719032789, guid: 972c81e8bd3b8824b867df2656930f87, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -619,6 +623,10 @@ PrefabInstance:
     - target: {fileID: 6395179683719032794, guid: 972c81e8bd3b8824b867df2656930f87, type: 3}
       propertyPath: m_Name
       value: Dungeon_Match
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481805679884300332, guid: 972c81e8bd3b8824b867df2656930f87, type: 3}
+      propertyPath: spawnInterval
+      value: 1500
       objectReference: {fileID: 0}
     - target: {fileID: 7651983708809038288, guid: 972c81e8bd3b8824b867df2656930f87, type: 3}
       propertyPath: m_IsActive
