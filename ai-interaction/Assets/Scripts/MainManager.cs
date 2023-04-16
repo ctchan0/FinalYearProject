@@ -6,11 +6,13 @@ using UnityEngine.UI;
 public class MainManager : MonoBehaviour
 {
     public static MainManager Instance { get; private set; }
-    public Class selectedClass;
-    public int spawnT;
-    public int initN; // number of monsters at start
-    public bool hasWave; // number of monsters each wave
-    public int healthIncrement; // power of monsters
+    public Class selectedClass = Class.None;
+    public int spawnT = 1500;
+    public int initN = 2; // number of monsters at start
+    public int waveNumber = 0; // number of monsters each wave
+    public int healthIncrement = 0; // power of monsters
+
+    public float volume = 1f;
 
     private void Awake()
     {

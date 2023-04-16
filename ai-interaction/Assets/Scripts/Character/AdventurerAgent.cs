@@ -11,7 +11,8 @@ public enum Class
     Barbarian,
     Mage,
     Knight,
-    Rogue
+    Rogue,
+    None,
 };
 
 public class AdventurerAgent : Agent

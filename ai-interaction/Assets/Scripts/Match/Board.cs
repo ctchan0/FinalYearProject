@@ -38,9 +38,11 @@ public class Board : MonoBehaviour
     public int numberOfMonstersEachWave = 3;
     private bool canSpawn = false;
     public bool independentPlay = true;
-    public int spawnInterval = 15000;
+    public int spawnInterval = 1500;
     private bool spawnTrigger = false;
     private int m_ResetTimer;
+
+    public int point = 0;
 
     private void Awake()
     {
@@ -62,10 +64,7 @@ public class Board : MonoBehaviour
 
     private void FixedUpdate() 
     {
-        if (!gameOver)
-            m_ResetTimer += 1;
-
-        if (m_ResetTimer != 0 && m_ResetTimer % spawnInterval == 0)
+        if (m_ResetTimer % spawnInterval == 0)
         {
             spawnTrigger = true;
         }
@@ -74,6 +73,8 @@ public class Board : MonoBehaviour
             spawnTrigger = false;
             StartMonsterTurn();
         }
+        if (!gameOver)
+            m_ResetTimer += 1;
     }
 
     public void GameOver(bool win)
@@ -91,13 +92,16 @@ public class Board : MonoBehaviour
             activePiece.SetReward(-1);
         }
 
-        StartCoroutine(Reset());
+        if (independentPlay)
+        {
+            Reset();   
+        }
+        activePiece.EndEpisode();
     }
 
-    public IEnumerator Reset()
+    public void Reset()
     {
-        yield return new WaitForSeconds(1f);
-
+        // yield return new WaitForSeconds(1f);
         blockManager.Clear();
         foreach (Transform child in blocks.transform) 
         {
@@ -109,8 +113,7 @@ public class Board : MonoBehaviour
         spawnTrigger = false;
         gameOver = false;
 
-        yield return new WaitForSeconds(1f);
-        activePiece.EndEpisode();
+        // yield return new WaitForSeconds(1f);
     }
 
     public bool IsValidPos(Vector3Int localPos, Vector3Int[] route)
@@ -136,7 +139,7 @@ public class Board : MonoBehaviour
     #region Monster
     public void StartMonsterTurn() // human-playable
     {
-        if (enableSpawner)
+        if (enableSpawner && !gameOver)
         {
             blockManager.AllBlocksMoveUp(1);
             if (autoSpawner)

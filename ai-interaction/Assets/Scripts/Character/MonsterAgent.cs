@@ -59,8 +59,16 @@ public class MonsterAgent : Agent
 
     private void SetHealth()
     {
-        currentHealth = maxHealth;
-        m_HealthBar.SetMaxHealth(maxHealth);
+        if (GameObject.Find("MainManager"))
+        {
+            currentHealth = maxHealth + MainManager.Instance.healthIncrement;
+            m_HealthBar.SetMaxHealth(maxHealth + MainManager.Instance.healthIncrement);
+        }
+        else
+        {
+            currentHealth = maxHealth;
+            m_HealthBar.SetMaxHealth(maxHealth);
+        }
     }
 
     public void GetDamage(int damage)
@@ -132,7 +140,7 @@ public class MonsterAgent : Agent
         if (other.gameObject.CompareTag("Adventurer"))
         {
             var target = other.gameObject.GetComponent<AdventurerAgent>();
-            target.GetDamage(damage);
+            target.GetDamage(damage); 
             AddReward((float)damage / target.maxHealth);
             if (target.isDead)
                 AddReward(target.worth);

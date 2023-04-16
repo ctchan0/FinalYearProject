@@ -297,11 +297,13 @@ public class PieceAgent : Agent
     public override void OnEpisodeBegin()
     {
         // Initialize a number of monsters in the beginning
-        m_SpawningRange = (int)m_ResetParams.GetWithDefault("spawn_range", DefaultSpawningRange);
-        board.SpawnMonsterInAuto(m_SpawningRange);
+        m_SpawningRange = 1;
+        board.blockManager = new BlockManager(this.board, board.boardDepth, board.boardWidth);
     
         if (board.independentPlay) // if not active, need to be triggered by battlefield
+        {
             StartNewTurn();
+        }
         //else 
             // Debug.Log("Board is not active now!!!");
     }
@@ -965,7 +967,10 @@ public class PieceAgent : Agent
             {
                 route[i] = newRoute[i];
                 this.trapBlocks[i].transform.localPosition = newRoute[i];
-                ghost.ghostBlocks[i].transform.localPosition = newRoute[i];
+                if (ghost.ghostBlocks != null)
+                    ghost.ghostBlocks[i].transform.localPosition = newRoute[i];
+                else
+                    Debug.Log("Ghost is gone!");
             }
         }
         ghost.UpdatePos();
@@ -1122,6 +1127,7 @@ public class PieceAgent : Agent
     public void ClearMonster(int colour)
     {
         board.numberOfMonsters--;
+        this.board.point ++;
         AddReward(1f);
 
         if (m_EnvController)
